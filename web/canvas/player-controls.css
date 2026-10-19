@@ -1,0 +1,41 @@
+/* Canvas keeps the website's button shapes in its own stylesheet. */
+
+.canvas-page #playerFooter .control:not(.control-purple),
+.canvas-page #playerFooter .speak-pill:not(.is-feature-active) {
+  border: 1px solid var(--footer-grey-border);
+  color: var(--footer-grey-colour);
+  background: var(--footer-grey-face);
+  box-shadow: var(--footer-grey-shadow);
+  backdrop-filter: blur(26px) saturate(1.45);
+  transform: none;
+}
+
+.canvas-page #playerFooter .control:not(.control-purple) {
+  transition: transform 160ms ease, color 160ms ease, background 160ms ease;
+}
+
+.canvas-page #playerFooter .control-purple {
+  border-color: #6c28d9;
+  color: #fff;
+  background: #7b3aed;
+  box-shadow: inset 0 1px 0 #ffffff5c, 0 14px 28px #7b3aed3d, 0 5px 10px #232a3b1a, 0 1px 2px #232a3b14;
+  backdrop-filter: blur(26px) saturate(1.45);
+  transform: none;
+  transition: color 160ms ease, background 160ms ease, transform 160ms ease, box-shadow 160ms ease;
+}
+
+.canvas-page #playerFooter .control-purple:hover {
+  background: #6c28d9;
+  transform: none;
+}
+
+.canvas-page #playerFooter .control:disabled { opacity: .38; }
+.canvas-page #playerFooter .speak-pill:disabled { opacity: .72; }
+
+@media (min-width: 1041px) {
+  .canvas-page #playerFooter .action-row { width: auto; flex: 0 1 auto; gap: 24px; margin: 0; transform: none; }
+  .canvas-page #playerFooter .player-controls { width: auto; flex: 0 0 auto; gap: 14px; }
+  .canvas-page #playerFooter .control { width: 46px; height: 46px; flex-shrink: 0; }
+  .canvas-page #playerFooter .control-play { width: 61px; height: 61px; }
+  .canvas-page #playerFooter .speak-pill:not(.is-feature-active) { display: flex; width: 112px; height: 42px; margin: 0; flex-shrink: 0; font-size: 15px; }
+}

@@ -1,0 +1,7 @@
+@import url("./assets/fonts/libre-baskerville/font.css");
+
+.player-hero,
+.player-hero *,
+.focus-sentence {
+  font-family: "Libre Baskerville", Baskerville, "Times New Roman", serif;
+}

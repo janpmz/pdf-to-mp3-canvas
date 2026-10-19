@@ -1,0 +1,46 @@
+@font-face {
+  font-family: "Site Inter";
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url("/assets/fonts/inter/InterVariable.woff2") format("woff2");
+}
+
+.app-toolbar-brand,
+.site-footer a.site-footer-brand,
+.mcp-brand,
+.unsubscribe-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.brand-mark {
+  content: "";
+  display: inline-block;
+  width: var(--brand-mark-size, 32px);
+  height: var(--brand-mark-size, 32px);
+  flex: 0 0 var(--brand-mark-size, 32px);
+  background-color: var(--brand-mark-color, var(--accent-700, #7137ff));
+  -webkit-mask: url("/assets/brand/documentplayer-purple.png") center / 128% no-repeat;
+  mask: url("/assets/brand/documentplayer-purple.png") center / 128% no-repeat;
+}
+
+@media (forced-colors: active) {
+  .brand-mark {
+    background-color: LinkText;
+    forced-color-adjust: none;
+  }
+}
+
+a:is(.mcp-brand, .unsubscribe-brand, .events-brand) {
+  color: var(--ink, #050b1a);
+  font: 700 18px/34px "Site Inter", system-ui, sans-serif;
+  letter-spacing: -.025em;
+  text-decoration: none;
+}
+@media (max-width: 1200px) {
+  a:is(.mcp-brand, .unsubscribe-brand, .events-brand) { font-size: 14px; }
+}

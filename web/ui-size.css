@@ -1,0 +1,85 @@
+:root {
+  --ui-toolbar-scale: 0.85;
+  --ui-footer-scale: 0.8;
+  --ui-sidebar-scale: 0.9;
+  --ui-title-scale: 0.65;
+  --ui-footer-height: calc(116px * var(--ui-footer-scale));
+}
+
+/* Keep the old sizes in small windows and the MCP reader, in either view. */
+/* Scale the contents while keeping the toolbar across the full page. */
+:root:has(> body:not(.is-small-window, .mcp-reader)) .app-toolbar > :is(.app-toolbar-left, .app-toolbar-center, .app-toolbar-right) {
+  zoom: var(--ui-toolbar-scale);
+}
+
+/* The fixed bar stays against the window edge at every size. */
+:root:has(> body:not(.is-small-window, .mcp-reader)) .player-footer {
+  container-type: inline-size;
+  zoom: var(--ui-footer-scale);
+}
+
+@container (max-width: 900px) {
+  :root:has(> body:not(.is-small-window, .mcp-reader)) .player-footer .footer-keyboard-hint {
+    visibility: hidden;
+  }
+}
+
+@container (max-width: 300px) {
+  :root:has(> body:not(.is-small-window, .mcp-reader)) .player-footer .focus-mode-button > span {
+    display: none;
+  }
+}
+
+:root:has(> body:not(.is-small-window, .mcp-reader)) .player-hero,
+:root:has(> body:not(.is-small-window, .mcp-reader)) .chapter-sidebar {
+  bottom: var(--ui-footer-height);
+}
+
+:root:has(> body:not(.is-small-window, .mcp-reader)) .chapter-sidebar > :is(.chapter-sidebar-header, .chapter-sidebar-list) {
+  zoom: var(--ui-sidebar-scale);
+}
+
+:root:has(> body:not(.is-small-window, .mcp-reader)) .player-hero :is(#chapterTitle, .sample-chapter-heading) {
+  width: min(100%, calc(680px * var(--ui-title-scale)));
+  min-height: calc(66px * var(--ui-title-scale));
+  font-size: calc(61px * var(--ui-title-scale));
+  line-height: 1.08;
+}
+
+:root:has(> body:not(.is-small-window, .mcp-reader)) .is-focus-mode .focus-reader,
+:root:has(> body:not(.is-small-window, .mcp-reader)) .is-focus-mode .page-loader {
+  bottom: calc(var(--ui-footer-height) + env(safe-area-inset-bottom, 0px));
+}
+
+:root:has(> body:not(.is-small-window, .mcp-reader)) .is-focus-mode .player-footer {
+  height: calc((var(--ui-footer-height) + env(safe-area-inset-bottom, 0px)) / var(--ui-footer-scale));
+}
+
+@media (max-width: 920px) {
+  :root:has(> body:not(.is-small-window, .mcp-reader)) .player-hero :is(#chapterTitle, .sample-chapter-heading) {
+    width: 100%;
+    min-height: 0;
+    font-size: calc(clamp(36px, 4.8vw, 44px) * var(--ui-title-scale));
+    line-height: 1.1;
+  }
+}
+
+@media (max-width: 720px) {
+  :root {
+    --ui-footer-height: calc(128px * var(--ui-footer-scale));
+  }
+
+  :root:has(> body:not(.is-small-window, .mcp-reader)) .chapter-sidebar {
+    bottom: 0;
+  }
+
+  :root:has(> body:not(.is-small-window, .mcp-reader)) .player-hero :is(#chapterTitle, .sample-chapter-heading) {
+    font-size: calc(clamp(39px, 12vw, 52px) * var(--ui-title-scale));
+  }
+}
+
+/* Keep the phone menu sized to the window, outside the toolbar's scale. */
+:root:has(> body:not(.is-small-window, .mcp-reader)) .app-toolbar .mobile-toolbar-menu-panel,
+:root:has(> body:not(.is-small-window, .mcp-reader)) .app-toolbar .mobile-toolbar-menu-backdrop {
+  zoom: calc(1 / var(--ui-toolbar-scale));
+}

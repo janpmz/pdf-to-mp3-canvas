@@ -1,0 +1,108 @@
+.page-loader {
+  position: absolute;
+  z-index: 30;
+  top: min(32vh, 300px);
+  right: 0;
+  left: 0;
+  display: grid;
+  place-items: center;
+  opacity: 1;
+  pointer-events: none;
+  transition: opacity 220ms ease;
+}
+
+.page-loader.is-leaving {
+  opacity: 0;
+}
+
+.page-loader[hidden] {
+  display: none;
+}
+
+.apple-spinner {
+  position: relative;
+  display: inline-block;
+  width: 24px;
+  height: 24px;
+  flex: 0 0 24px;
+  color: #6b7280;
+}
+
+.apple-spinner > span {
+  position: absolute;
+  top: 1px;
+  left: 11px;
+  width: 2px;
+  height: 7px;
+  border-radius: 2px;
+  opacity: 0.14;
+  background: currentColor;
+  transform-origin: 1px 11px;
+  animation: apple-spinner-fade 1s linear infinite;
+}
+
+.apple-spinner > span:nth-child(1) { transform: rotate(0deg); animation-delay: -0.916s; }
+.apple-spinner > span:nth-child(2) { transform: rotate(30deg); animation-delay: -0.833s; }
+.apple-spinner > span:nth-child(3) { transform: rotate(60deg); animation-delay: -0.75s; }
+.apple-spinner > span:nth-child(4) { transform: rotate(90deg); animation-delay: -0.666s; }
+.apple-spinner > span:nth-child(5) { transform: rotate(120deg); animation-delay: -0.583s; }
+.apple-spinner > span:nth-child(6) { transform: rotate(150deg); animation-delay: -0.5s; }
+.apple-spinner > span:nth-child(7) { transform: rotate(180deg); animation-delay: -0.416s; }
+.apple-spinner > span:nth-child(8) { transform: rotate(210deg); animation-delay: -0.333s; }
+.apple-spinner > span:nth-child(9) { transform: rotate(240deg); animation-delay: -0.25s; }
+.apple-spinner > span:nth-child(10) { transform: rotate(270deg); animation-delay: -0.166s; }
+.apple-spinner > span:nth-child(11) { transform: rotate(300deg); animation-delay: -0.083s; }
+.apple-spinner > span:nth-child(12) { transform: rotate(330deg); animation-delay: 0s; }
+
+.page-loader .apple-spinner {
+  width: 18px;
+  height: 18px;
+  flex-basis: 18px;
+  color: var(--accent-600, #7c3aed);
+}
+
+.page-loader .apple-spinner > span {
+  top: 0;
+  left: 8px;
+  width: 2px;
+  height: 5px;
+  transform-origin: 1px 9px;
+}
+
+.apple-spinner.is-small {
+  width: 14px;
+  height: 14px;
+  flex-basis: 14px;
+}
+
+.apple-spinner.is-small > span {
+  top: 0;
+  left: 6px;
+  width: 1.5px;
+  height: 4px;
+  transform-origin: 0.75px 7px;
+}
+
+.load-reveal {
+  visibility: hidden;
+  opacity: 0;
+  transition: opacity 360ms ease, visibility 0s linear 360ms;
+}
+
+.load-reveal.is-visible {
+  visibility: visible;
+  opacity: 1;
+  transition: opacity 360ms ease;
+}
+
+@keyframes apple-spinner-fade {
+  0% { opacity: 1; }
+  100% { opacity: 0.14; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .page-loader,
+  .load-reveal {
+    transition: none;
+  }
+}
