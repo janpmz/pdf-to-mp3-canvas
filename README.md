@@ -2,6 +2,8 @@
 
 PDFTOMP3-Canvas is a text player for AI agents. It uses text-to-speech. The AI sends text into the canvas, and the user can listen sentence by sentence.
 
+[Try the player](https://pdftomp3.com/canvas/?example=1) — a short example with fixed audio. No account or API key needed. Press Play to listen. Ask and Explain need your Gemini key.
+
 ## Use from your AI
 
 Paste this prompt into an AI that can read web pages and send requests:

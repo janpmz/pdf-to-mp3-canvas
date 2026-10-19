@@ -9,6 +9,11 @@ const local = ['localhost', '127.0.0.1', '[::1]'].includes(location.hostname);
 const apiBase = new URL(configuredApi || (local ? 'http://localhost:8702/canvas-api' : '/canvas-api'), location.href).href.replace(/\/$/, '');
 const params = new URLSearchParams(location.search);
 let canvasId = params.get('id') || '';
+const source = !canvasId && params.get('example') === '1'
+  ? (await import('./example.js')).createCanvasExample() : {};
+canvasId ||= source.canvasId || '';
+const request = source.request || apiRequest;
+const pollInterval = source.pollInterval ?? 3000;
 let canvas = null, model = { chapters: [], sentences: [] }, currentState = null;
 let focusedId = '', focusedWords = [], fullRows = [], highlighted = [];
 let focus = true, pollTimer, etag, refreshing = false, firstLoad = true;
@@ -25,17 +30,20 @@ function savedSpeechKey() {
 }
 // One saved key serves all canvases in this browser. Only Google receives it.
 let geminiKey = savedSpeechKey();
-const settings = storage.get('settings', {});
+const settingsKey = source.settingsKey || 'settings';
+const settings = storage.get(settingsKey, {});
 $('voice').value = normalizeVoice(settings.voice);
 $('pace').value = normalizePace(settings.pace || 'normal');
+source.configureControls?.({ voice: $('voice'), pace: $('pace') });
 const player = createSentencePlayer({
   voice: $('voice').value, pace: $('pace').value, prefetchWithoutAutoplay: true,
   getToken: speechKey,
   onStateChange: render, onProgress: renderWords,
   onError: (text, error) => {
     if (error?.code === 'CANVAS_KEY_REQUIRED') { pendingAction = 'read'; openKey(); }
-    else message('Speech could not start. Check your Gemini key and its access to Gemini Live, then try again.');
+    else message(source.speechError || 'Speech could not start. Check your Gemini key and its access to Gemini Live, then try again.');
   },
+  ...source.playerOptions,
 });
 const conversation = createSentenceConversation({
   getToken: speechKey,
@@ -64,7 +72,7 @@ function message(text, temporary = false) {
   if (temporary) noticeTimer = setTimeout(() => message(''), 3500);
 }
 function owner() { return storage.get(`owner:${canvasId}`, null); }
-async function request(path, { method = 'GET', body, code, tag } = {}) {
+async function apiRequest(path, { method = 'GET', body, code, tag } = {}) {
   const response = await fetch(`${apiBase}${path}`, { method, credentials: 'omit', referrerPolicy: 'no-referrer',
     headers: { ...(body !== undefined ? { 'Content-Type': 'application/json' } : {}),
       ...(code ? { Authorization: `Bearer ${code}` } : {}), ...(tag ? { 'If-None-Match': tag } : {}) },
@@ -215,7 +223,7 @@ async function refresh() {
   } finally {
     refreshing = false;
     clearTimeout(pollTimer);
-    if (canvasId) pollTimer = setTimeout(refresh, document.hidden ? 15000 : 3000);
+    if (canvasId && pollInterval) pollTimer = setTimeout(refresh, document.hidden ? pollInterval * 5 : pollInterval);
   }
 }
 async function copy(text, success) {
@@ -249,7 +257,7 @@ function openKey() {
   $('geminiKey').focus();
 }
 function saveSettings() {
-  storage.set('settings', { voice: $('voice').value, pace: $('pace').value, autoplay: player.getState().autoplay });
+  storage.set(settingsKey, { voice: $('voice').value, pace: $('pace').value, autoplay: player.getState().autoplay });
 }
 
 function renderChat(state = 'idle') {
@@ -334,7 +342,7 @@ $('copyPromptText').onclick = async () => {
   if (!await copy($('promptText').value, 'Prompt copied.')) { $('promptText').focus(); $('promptText').select(); }
 };
 $('shareButton').onclick = async () => {
-  const link = new URL(location.href); link.hash = ''; link.search = new URLSearchParams({ id: canvasId }).toString();
+  const link = new URL(canvas?.url || location.href); link.hash = '';
   if (!await copy(link.href, 'Canvas link copied. Anyone with this link can read the text.')) {
     $('promptText').value = link.href; $('ownerAccess').hidden = true; $('promptDialog').showModal(); $('promptText').select();
   }
