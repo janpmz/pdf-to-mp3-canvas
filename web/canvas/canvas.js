@@ -10,7 +10,7 @@ const apiBase = new URL(configuredApi || (local ? 'http://localhost:8702/canvas-
 const params = new URLSearchParams(location.search);
 let canvasId = params.get('id') || '';
 const source = !canvasId && params.get('example') === '1'
-  ? (await import('./example.js')).createCanvasExample() : {};
+  ? (await import('./example.js?v=20261019-chat')).createCanvasExample() : {};
 canvasId ||= source.canvasId || '';
 const request = source.request || apiRequest;
 const pollInterval = source.pollInterval ?? 3000;
@@ -45,7 +45,7 @@ const player = createSentencePlayer({
   },
   ...source.playerOptions,
 });
-const conversation = createSentenceConversation({
+const conversation = (source.createConversation || createSentenceConversation)({
   getToken: speechKey,
   playbackWorkletUrl: new URL('./live-audio-playback-worklet.js', import.meta.url),
   onStateChange: renderChat,
@@ -303,7 +303,7 @@ async function startChat(type) {
   await conversation.stop();
   if (run !== chatRun) return;
   player.pause(); message('');
-  if (!geminiKey) { pendingAction = type; openKey(); return; }
+  if (!geminiKey && conversation.requiresKey !== false) { pendingAction = type; openKey(); return; }
   activeChat = type; renderChat('connecting');
   const state = player.getState();
   await conversation.start({ type, sentences: state.sentences, sentenceIndex: state.sentenceIndex, voice: state.voice, pace: state.pace });

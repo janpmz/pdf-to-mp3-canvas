@@ -1,0 +1,8 @@
+{
+  "ask": "You can ask questions about the current sentence, or ask for a translation. To use Ask, open API Key in the menu and add your Gemini key. Your key stays in your browser and goes directly to Google.",
+  "explain-003": "The player reads one sentence at a time. You can pause, hear it again, or move to the next sentence when you are ready. Add your Gemini key under API Key in the menu to ask questions and get live explanations.",
+  "explain-009": "You choose when to repeat a sentence and when to move on. Repeat plays the same sentence again, and Next takes you to the next one. Add your Gemini key under API Key in the menu to ask questions and get live explanations.",
+  "explain-010": "If your thoughts drift, you can return to the same sentence without finding your place in a long recording. Hear it again before you continue. Add your Gemini key under API Key in the menu to ask questions and get live explanations.",
+  "explain-011": "The player can wait until you are ready to continue. Turn Auto play off, then press Next after you have had time to think. Add your Gemini key under API Key in the menu to ask questions and get live explanations.",
+  "explain-012": "With Auto play on, the player starts the next sentence as soon as the current one ends. Turn it off if you prefer to choose when to continue. Add your Gemini key under API Key in the menu to ask questions and get live explanations."
+}

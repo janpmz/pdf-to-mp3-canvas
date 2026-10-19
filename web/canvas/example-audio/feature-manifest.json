@@ -1,0 +1,42 @@
+{
+  "voice": "Enceladus",
+  "model": "gemini-2.5-flash-preview-tts",
+  "clips": {
+    "ask": {
+      "text": "You can ask questions about the current sentence, or ask for a translation. To use Ask, open API Key in the menu and add your Gemini key. Your key stays in your browser and goes directly to Google.",
+      "seconds": 13.371,
+      "bytes": 107756,
+      "sha256": "391a59d3693f0ed45a65f14c40e22e2ffbfdda31834a710977936b867bb072a3"
+    },
+    "explain-003": {
+      "text": "The player reads one sentence at a time. You can pause, hear it again, or move to the next sentence when you are ready. Add your Gemini key under API Key in the menu to ask questions and get live explanations.",
+      "seconds": 15.171,
+      "bytes": 122156,
+      "sha256": "9b8470396c0c89fcaa8bf3f367af30ad71b98ef7e1722c3fd892de3bd0e61a7c"
+    },
+    "explain-009": {
+      "text": "You choose when to repeat a sentence and when to move on. Repeat plays the same sentence again, and Next takes you to the next one. Add your Gemini key under API Key in the menu to ask questions and get live explanations.",
+      "seconds": 15.131,
+      "bytes": 121772,
+      "sha256": "4d4fd5ba41db6a4bb2399abd47c8693a054787b0ded0eb2c3615baebeb1dcfe2"
+    },
+    "explain-010": {
+      "text": "If your thoughts drift, you can return to the same sentence without finding your place in a long recording. Hear it again before you continue. Add your Gemini key under API Key in the menu to ask questions and get live explanations.",
+      "seconds": 14.411,
+      "bytes": 116012,
+      "sha256": "449d02456fbd9e4bf8756b7037df31806e19661baf5890b279c4906ef28dd601"
+    },
+    "explain-011": {
+      "text": "The player can wait until you are ready to continue. Turn Auto play off, then press Next after you have had time to think. Add your Gemini key under API Key in the menu to ask questions and get live explanations.",
+      "seconds": 13.891,
+      "bytes": 111788,
+      "sha256": "ae45d99f541c8f53b0d078ef1f106197aa39830849680c4028547123591c8c55"
+    },
+    "explain-012": {
+      "text": "With Auto play on, the player starts the next sentence as soon as the current one ends. Turn it off if you prefer to choose when to continue. Add your Gemini key under API Key in the menu to ask questions and get live explanations.",
+      "seconds": 14.051,
+      "bytes": 113132,
+      "sha256": "6289f654eec693e467554e1203aa564eff176a40193b4687e5438c4168232fa1"
+    }
+  }
+}

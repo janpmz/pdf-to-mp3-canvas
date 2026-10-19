@@ -1,3 +1,5 @@
+import { createExampleConversation } from './example-conversation.js';
+
 const recordings = [
   ['003', 'Control the playback sentence by sentence.'],
   ['009', 'You decide when to hear a sentence again or move to the next one.'],
@@ -32,6 +34,12 @@ export function createCanvasExample({ fetchAudio = (...args) => fetch(...args),
     pollInterval: 0,
     settingsKey: 'example-settings',
     speechError: 'The example audio could not load. Please try again.',
+    createConversation(options) {
+      return createExampleConversation({ ...options,
+        askFile: new URL('./example-audio/ask.mp3', import.meta.url).href,
+        explanationFiles: new Map(recordings.map(([id, text]) => [text, new URL(`./example-audio/explain-${id}.mp3`, import.meta.url).href])),
+      });
+    },
     configureControls({ voice, pace }) {
       voice.selectedOptions[0].textContent = 'Demo voice';
       pace.value = 'normal';
