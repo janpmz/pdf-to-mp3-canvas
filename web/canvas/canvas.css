@@ -95,9 +95,7 @@ button, input, select, textarea { font: inherit; }
 .dialog-heading h2 { margin: 0; }
 .canvas-dialog .dialog-heading button { min-height: 36px; padding: 8px 12px; }
 .canvas-dialog p { margin: 16px 0; }
-/* Hide the key without password mode, which blocks Mac clipboard shortcuts. */
-#geminiKey { -webkit-text-security: disc; }
-#geminiKey::placeholder { -webkit-text-security: none; }
+.canvas-page #playerFooter .action-row { display: flex; justify-content: center; }
 .dialog-actions { display: flex; justify-content: flex-end; gap: 12px; margin-top: 20px; }
 .dialog-actions .subscription-button-primary { width: auto; }
 .prompt-dialog { width: min(700px, calc(100% - 32px)); }

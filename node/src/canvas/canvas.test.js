@@ -125,3 +125,26 @@ test('public CORS supports a separately hosted reader, discovery has no account 
     for (let i = 0; i < 10; i++) assert.equal((await f.call('POST', '/canvases', { title: 'Canvas' })).status, 201)
     assert.equal((await f.call('POST', '/canvases', { title: 'Limited' })).status, 429)
 })
+
+
+test('speech reads only saved sentences, checks languages, and never accepts provider keys or arbitrary text', async t => {
+    const calls = []
+    const f = await fixture(t, { speech: { async synthesize(...args) { calls.push(args); return Buffer.from([0, 0, 0, 64]) } } })
+    const canvas = await (await f.call('POST', '/canvases', { title: 'Speech test', chapters: [chapter('Read', 'Read only this sentence.')] })).json()
+    const sentence = canvas.chapters[0].pages[0].sentences[0]
+    const path = `/canvases/${canvas._id}/sentences/${sentence._id}/speech`
+    const reply = await f.call('POST', path, { voice: 'af_heart' })
+    assert.equal(reply.status, 200)
+    assert.equal(reply.headers.get('content-type'), 'audio/pcm;rate=24000;channels=1')
+    assert.deepEqual(Buffer.from(await reply.arrayBuffer()), Buffer.from([0, 0, 0, 64]))
+    assert.deepEqual(calls, [[sentence.text, 'af_heart', canvas._id]])
+    assert.equal((await f.call('POST', path, { voice: 'bf_emma' })).status, 200)
+    for (const body of [{ text: 'Do not send this.' }, { api_key: 'never-echo-this' }, { voice: 'Kore' }, { voice: 'ff_siwis' }]) {
+        const bad = await f.call('POST', path, body)
+        assert.equal(bad.status, 400)
+        assert.equal((await bad.text()).includes('never-echo-this'), false)
+    }
+    assert.equal(calls.length, 2)
+    assert.equal((await f.call('POST', `/canvases/${canvas._id}/sentences/missing/speech`, {})).status, 404)
+    assert.equal((await f.call('POST', path, {}, undefined, { Origin: 'https://unrelated.example' })).status, 403)
+})

@@ -39,6 +39,8 @@ export function splitSentences(value) {
 // Canvas owns its reader. Stored sentence IDs and chapter jumps do not alter the app player.
 export function createSentencePlayer(options = {}) {
   const speech = options.speech || createLiveSpeech(options);
+  const voices = options.voices || VOICES;
+  const chooseVoice = value => voices.includes(value) ? value : (options.defaultVoice || normalizeVoice(value));
   const cache = options.cache || createAudioCache();
   const makeKey = options.cacheKey || audioCacheKey;
   const AudioContextClass = options.AudioContextClass || globalThis.AudioContext || globalThis.webkitAudioContext;
@@ -60,7 +62,7 @@ export function createSentencePlayer(options = {}) {
   let wordIndex = -1;
   let autoplay = false;
   let pace = normalizePace(options.pace);
-  let voice = normalizeVoice(options.voice);
+  let voice = chooseVoice(options.voice);
   let desiredPlaying = false;
   let selectionRun = 0;
   let playbackRun = 0;
@@ -127,7 +129,7 @@ export function createSentencePlayer(options = {}) {
     }
     const record = { chunks: [], bytes: 0, usedAt: ++lastUse, saving: false, sampleRate: OUTPUT_SAMPLE_RATE, complete: false, controller: new AbortController(), error: null };
     const run = selectionRun;
-    const speechOptions = { voice, pace, sessionId };
+    const speechOptions = { voice, pace, sessionId, sentenceId: sentences[index]._id };
     records.set(index, record);
     record.promise = (async () => {
       try {
@@ -368,7 +370,7 @@ export function createSentencePlayer(options = {}) {
       else prefetch();
       emit();
     },
-    setVoice(value) { if (VOICES.includes(value)) return changeSpeech(value, pace); },
+    setVoice(value) { if (voices.includes(value)) return changeSpeech(value, pace); },
     setPace(value) { if (PACES.includes(value)) return changeSpeech(voice, value); },
     setSpeed(value) { if (Number.isFinite(value)) return changeSpeech(voice, paceFromSpeed(value)); },
     getState: state,

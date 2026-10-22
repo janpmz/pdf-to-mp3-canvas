@@ -6,12 +6,14 @@
     "node": ">=20"
   },
   "scripts": {
-    "start": "node tasks/runCanvas.js"
+    "start": "node tasks/runCanvas.js",
+    "test": "node --test src/canvas/*.test.js ../web/canvas/*.test.js"
   },
   "dependencies": {
     "express": "^5.1.0",
     "cors": "^2.8.5",
     "mongodb": "^6.20.0",
-    "zod": "^4.4.3"
+    "zod": "^4.4.3",
+    "dotenv": "^17.2.3"
   }
 }

@@ -2,8 +2,11 @@ const express = require('express')
 const cors = require('cors')
 const { z } = require('zod')
 const { createCanvasStore } = require('./store')
+const { createFreeSpeech, SAMPLE_RATE } = require('./freeSpeech')
+const { resolveVoiceAndLang, getCatalog } = require('./voices')
+const { iterPages } = require('../documentStructure')
 
-function createCanvasRouter({ getDb, websiteUrl, now = Date.now, rateLimit = true }) {
+function createCanvasRouter({ getDb, websiteUrl, now = Date.now, rateLimit = true, speech = createFreeSpeech({ url: process.env.FREETTS_URL, secret: process.env.FREETTS_SECRET }) }) {
     const router = express.Router()
     const store = createCanvasStore({ getDb, websiteUrl, now })
     const creates = new Map(), requests = new Map()
@@ -30,7 +33,23 @@ function createCanvasRouter({ getDb, websiteUrl, now = Date.now, rateLimit = tru
         create_url: new URL('/canvas-api/canvases', websiteUrl).href,
         guide_url: new URL('/canvas/guide.html', websiteUrl).href,
         upload_lifetime_hours: 24, canvas_expires: false, max_text_characters: 500000,
-        speech: 'The browser calls Gemini Live directly. Never send a Gemini key to this API.' }))
+        speech: 'The server uses its free Kokoro service. No user key is needed. Press Play to listen.' }))
+    router.get('/voices', (req, res) => res.json(getCatalog()))
+    router.post('/canvases/:id/sentences/:sentenceId/speech', run(async (req, res) => {
+        if (req.headers.origin && req.headers.origin !== new URL(websiteUrl).origin) {
+            return res.status(403).json({ error: 'Open the Canvas page to listen.' })
+        }
+        const body = z.object({ voice: z.string().max(40).optional() }).strict().parse(req.body)
+        const canvas = await store.get(req.params.id)
+        const sentence = [...iterPages(canvas.chapters)].flatMap(page => page.sentences)
+            .find(item => item._id === req.params.sentenceId)
+        if (!sentence) return res.status(404).json({ error: 'This sentence changed or no longer exists. Reload the canvas.' })
+        const { voice } = resolveVoiceAndLang(body.voice ? { voice: body.voice } : { lang: canvas.language })
+        const language = getCatalog().languages.find(item => item.voices.includes(voice)).tag.split('-')[0]
+        if (language !== canvas.language.split('-')[0]) return res.status(400).json({ error: 'Choose a voice in the reading language.' })
+        const pcm = await speech.synthesize(sentence.text, voice, canvas._id)
+        res.set({ 'Content-Type': `audio/pcm;rate=${SAMPLE_RATE};channels=1`, 'X-Content-Type-Options': 'nosniff' }).send(pcm)
+    }))
     router.post('/canvases', run(async (req, res) => res.status(201).json(await store.create(req.body))))
     router.get('/canvases/:id', run(async (req, res) => {
         const canvas = await store.get(req.params.id), etag = `"${canvas._id}:${canvas.revision}"`
@@ -48,12 +67,13 @@ function createCanvasRouter({ getDb, websiteUrl, now = Date.now, rateLimit = tru
     }))
     router.delete('/canvases/:id', run(async (req, res) => { await store.remove(req.params.id, code(req)); res.status(204).end() }))
     router.use((error, req, res, next) => {
+        if (error.status === 429) res.set('Retry-After', '2')
         const status = error.status || (error instanceof z.ZodError ? 400 : 500)
         // Replies never echo submitted values, headers, or provider messages.
         const message = error instanceof z.ZodError ? 'Check the canvas text format. Send only the fields listed in the guide.'
             : status === 413 ? 'This request is too large. Send one chapter at a time.'
             : error.type === 'entity.parse.failed' ? 'Send valid JSON with the fields listed in the guide.'
-            : status >= 500 ? 'Could not save this canvas. Try again.' : error.message
+            : status >= 500 ? (req.path.endsWith('/speech') ? ({ 503: 'Free speech is not set up on this server yet.', 504: 'Free speech is taking too long. Try again shortly.' }[status] || 'Free speech could not finish. Try again shortly.') : 'Could not save this canvas. Try again.') : error.message
         res.status(status).json({ error: message })
     })
     return router

@@ -75,6 +75,6 @@ test('chapter nesting maps to sentence jumps and prompts keep provider keys out 
   const prompt = canvasPrompt({ canvas: { _id: 'abc', url: 'http://localhost:3000/canvas/?id=abc' },
     apiBase: 'http://localhost:8702/canvas-api', uploadCode: 'upload-only', expiresAt: '2026-10-20T12:00:00Z' });
   assert.match(prompt, /Bearer UPLOAD_CODE/);
-  assert.match(prompt, /Never ask for my Gemini key/);
+  assert.match(prompt, /Never ask for a speech key/);
   assert.match(prompt, /http:\/\/localhost:3000\/canvas\/guide.html/);
 });

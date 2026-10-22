@@ -1,50 +1,32 @@
-# PDFTOMP3 Text Player Canvas
+# Free Canvas test
 
-PDFTOMP3-Canvas is a text player for AI agents. It uses text-to-speech. The AI sends text into the canvas, and the user can listen sentence by sentence.
+This local `free-canvas` branch uses the existing Kokoro service. Users send text, open Canvas, and press Play. They need no key or account. Ask and Explain are absent. Speed stays at Normal for this test.
 
-Example: [Try the player](https://pdftomp3.com/canvas/?example=1)
+## Run locally
 
-## Use from your AI
-
-Paste this prompt into an AI that can read web pages and send requests:
-
-```text
-Send text into the PDF TO MP3 Canvas please so I can listen to it, and then open the player link.
-Read https://pdftomp3.com/canvas/guide.html.
-
-[My request / explain which text you want to listen to]
-```
-
-The guide explains the JSON format and how to send text. It also gives optional tips for readings and teacher explanations.
-
-The AI agent needs to:
-
-1. Prepare the spoken text.
-2. Send it to the server in the required JSON format, as shown in the guide.
-3. Open the returned link so the user can listen.
-
-No account or plugin is needed. Anyone with the link can read the text.
-
-## Speech and privacy
-
-- Enter your Gemini key in the player. The key stays locally in your browser and is not sent or stored on our server. The browser sends it only to Google. It stays saved until you choose “Forget key”.
-- Canvas prepares the current sentence and up to two ahead. Changing the voice does not rebuild speech for the whole reading.
-- Ask starts a voice chat about the current sentence. Explain teaches it, then listens for questions.
-- Audio and reading position stay in your browser. Text stays on the server, so the same link works on other devices. Canvases do not expire.
-
-## Local use
-
-Needs Node.js 20 or newer and a running MongoDB. From the repository root:
+Needs Node.js 20 or newer and MongoDB. Install the packages, copy `node/.env.example` to `node/.env`, and set the two `FREETTS_` values to the existing service settings. Keep that file out of Git.
 
 ```sh
 npm --prefix node install
-CANVAS_PORT=3000 CANVAS_WEBSITE_URL=http://localhost:3000 node node/tasks/runCanvas.js
+npm --prefix node start
 ```
 
-Open [Canvas](http://localhost:3000/canvas/) or the [AI guide](http://localhost:3000/canvas/guide.html).
+Open [Canvas](http://localhost:3000/canvas/) or [the live speech test](http://localhost:3000/canvas/?example=1). The test creates a reading and uses real Kokoro speech; it does not play the old recorded demo. The default server still uses port 8702 unless `CANVAS_PORT=3000` is set in `node/.env`.
 
-## Review the source
+The [AI guide](http://localhost:3000/canvas/guide.html) covers text uploads. Text and sharing work as before. Anyone with the reading link can read and listen.
 
-The browser code is in `web/canvas/`; the text API is in `node/src/canvas/`. To check key use, start with `canvas.js`, `speech.js`, and `live-connection.js` in the browser folder.
+## Speech
 
-From the main PDFTOMP3 project, export just Canvas with `node canvas/export.mjs /tmp/pdftomp3-canvas`. The output folder must not exist yet.
+The browser requests speech for a saved sentence. The server reads that sentence, checks the voice against the reading language, queues Kokoro, checks its progress, and returns 24 kHz mono PCM sound. The service key stays on the server. The browser never talks to Google or asks for a key.
+
+Playback waits for the current sentence, then prepares up to two more within a 120-word limit. Repeat uses saved audio. A bounded server cache reuses recent sound. Both sites still share the existing speech queue, so other jobs can delay this test. Word highlighting remains an estimate from the audio clock.
+
+`node/src/canvas/freeSpeech.js` handles the service. `web/canvas/free-speech.js` plays its replies. The voice list comes unchanged from the existing `freetts/node/src/voices.js` in the local free speech project.
+
+## Checks
+
+```sh
+npm --prefix node test
+```
+
+The tests use fake speech unless you start the local server with the real service settings. This branch has not been pushed or deployed.

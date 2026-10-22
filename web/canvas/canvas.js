@@ -1,7 +1,6 @@
 import { createSentencePlayer } from './sentence-player.js';
-import { createSentenceConversation } from './live-conversation.js';
+import { createFreeSpeech, FREE_VOICES, freeAudioCacheKey } from './free-speech.js';
 import { canvasPrompt, canvasSentences } from './model.js';
-import { normalizeVoice, normalizePace } from './speech-options.js';
 
 const $ = id => document.getElementById(id);
 const configuredApi = document.querySelector('meta[name="canvas-api"]')?.content;
@@ -9,63 +8,35 @@ const local = ['localhost', '127.0.0.1', '[::1]'].includes(location.hostname);
 const apiBase = new URL(configuredApi || (local ? 'http://localhost:8702/canvas-api' : '/canvas-api'), location.href).href.replace(/\/$/, '');
 const params = new URLSearchParams(location.search);
 let canvasId = params.get('id') || '';
-const source = !canvasId && params.get('example') === '1'
-  ? (await import('./example.js?v=20261019-chat')).createCanvasExample() : {};
-canvasId ||= source.canvasId || '';
-const request = source.request || apiRequest;
-const pollInterval = source.pollInterval ?? 3000;
+const request = apiRequest;
+const pollInterval = 3000;
 let canvas = null, model = { chapters: [], sentences: [] }, currentState = null;
 let focusedId = '', focusedWords = [], fullRows = [], highlighted = [];
 let focus = true, pollTimer, etag, refreshing = false, firstLoad = true;
-let pendingAction = '', lastSavedSentence = '', noticeTimer;
-let activeChat = null, chatRun = 0;
+let lastSavedSentence = '', noticeTimer;
 const storage = {
   get(key, fallback) { try { return JSON.parse(localStorage.getItem(`canvas:${key}`)) ?? fallback; } catch { return fallback; } },
   set(key, value) { try { localStorage.setItem(`canvas:${key}`, JSON.stringify(value)); return true; } catch { return false; } },
   remove(key) { try { localStorage.removeItem(`canvas:${key}`); return true; } catch { return false; } },
 };
-function savedSpeechKey() {
-  const value = storage.get('gemini-key', '');
-  return typeof value === 'string' && value.length <= 1024 ? value.trim() : '';
-}
-// One saved key serves all canvases in this browser. Only Google receives it.
-let geminiKey = savedSpeechKey();
-const settingsKey = source.settingsKey || 'settings';
+const settingsKey = 'free-settings';
 const settings = storage.get(settingsKey, {});
-$('voice').value = normalizeVoice(settings.voice);
-$('pace').value = normalizePace(settings.pace || 'normal');
-source.configureControls?.({ voice: $('voice'), pace: $('pace') });
+$('pace').value = 'normal';
 const player = createSentencePlayer({
-  voice: $('voice').value, pace: $('pace').value, prefetchWithoutAutoplay: true,
-  getToken: speechKey,
-  onStateChange: render, onProgress: renderWords,
-  onError: (text, error) => {
-    if (error?.code === 'CANVAS_KEY_REQUIRED') { pendingAction = 'read'; openKey(); }
-    else message(source.speechError || 'Speech could not start. Check your Gemini key and its access to Gemini Live, then try again.');
-  },
-  ...source.playerOptions,
-});
-const conversation = (source.createConversation || createSentenceConversation)({
-  getToken: speechKey,
-  playbackWorkletUrl: new URL('./live-audio-playback-worklet.js', import.meta.url),
-  onStateChange: renderChat,
-  onError: text => message(text),
+  voice: settings.voice, defaultVoice: 'af_heart', voices: FREE_VOICES.map(item => item.id), pace: 'normal',
+  prefetchWithoutAutoplay: true, speech: createFreeSpeech({ apiBase }), cacheKey: freeAudioCacheKey,
+  onStateChange: render, onProgress: renderWords, onError: text => message(text),
 });
 player.setAutoplay(settings.autoplay !== false);
-
-function speechKey() {
-  if (!geminiKey) throw Object.assign(new Error('Enter your Gemini key to listen.'), { code: 'CANVAS_KEY_REQUIRED' });
-  return geminiKey;
+function updateVoices(language) {
+  const selected = player.getState().voice;
+  const choices = FREE_VOICES.filter(item => item.language === language.split('-')[0]);
+  $('voice').replaceChildren(...choices.map(item => {
+    const option = document.createElement('option'); option.value = item.id; option.textContent = item.name; return option;
+  }));
+  $('voice').value = choices.some(item => item.id === selected) ? selected : (choices[0]?.id || '');
+  if ($('voice').value) void player.setVoice($('voice').value);
 }
-function syncSpeechKey() {
-  const saved = savedSpeechKey();
-  if (saved === geminiKey) return;
-  geminiKey = saved;
-  updateKeyField();
-  void stopChat();
-  void player.load(currentState?.sentences || [], { play: false, sentenceIndex: currentState?.sentenceIndex || 0, sessionId: canvasId });
-}
-
 function message(text, temporary = false) {
   clearTimeout(noticeTimer);
   $('message').textContent = text; $('message').hidden = !text;
@@ -100,7 +71,7 @@ function appendSentence(container, sentence) {
 function renderWords(state) {
   if (!state) return;
   for (const element of highlighted) element?.classList.remove('is-current');
-  highlighted = activeChat ? [] : [focusedWords[state.wordIndex], fullRows[state.sentenceIndex]?.words[state.wordIndex]];
+  highlighted = [focusedWords[state.wordIndex], fullRows[state.sentenceIndex]?.words[state.wordIndex]];
   for (const element of highlighted) element?.classList.add('is-current');
 }
 function render(state) {
@@ -110,8 +81,6 @@ function render(state) {
   $('repeatButton').disabled = !hasText;
   $('previousButton').disabled = !hasText || state.sentenceIndex === 0;
   $('nextButton').disabled = !hasText || state.sentenceIndex >= state.sentences.length - 1;
-  $('askButton').disabled = !hasText;
-  $('explainButton').disabled = !hasText;
   const nextReady = !state.autoplay && state.status === 'ended' && !$('nextButton').disabled;
   $('nextButton').classList.toggle('control-purple', nextReady);
   $('nextButton').classList.toggle('next-callout-button', nextReady);
@@ -181,7 +150,7 @@ function renderChapters() {
 function showReader() {
   document.body.classList.toggle('is-focus-mode', focus);
   $('welcome').hidden = true; $('reader').hidden = false; $('playerFooter').hidden = false;
-  $('shareButton').hidden = false; $('keyButton').hidden = false;
+  $('shareButton').hidden = false;
   $('promptButton').hidden = !owner(); $('emptyPrompt').hidden = !owner();
 }
 async function refresh() {
@@ -191,12 +160,9 @@ async function refresh() {
     const result = await request(`/canvases/${encodeURIComponent(canvasId)}`, { tag: etag });
     if (result.unchanged) return;
     canvas = result.data; etag = result.tag; model = canvasSentences(canvas);
-    if (activeChat) {
-      const previous = currentState?.sentences[currentState.sentenceIndex];
-      if (!model.sentences.some(sentence => sentence._id === previous?._id && sentence.text === previous?.text)) await stopChat();
-    }
     document.title = `${canvas.title} — PDF TO MP3 Canvas`; document.documentElement.lang = canvas.language;
     $('canvasName').textContent = canvas.title;
+    if (firstLoad) updateVoices(canvas.language);
     showReader();
     const empty = !model.sentences.length;
     $('emptyCanvas').hidden = !empty; $('focusReader').hidden = empty || !focus;
@@ -211,7 +177,6 @@ async function refresh() {
     if (!focus) renderFullText();
   } catch (error) {
     if (error.status === 404) {
-      await stopChat();
       await player.load([], { play: false }); model = { chapters: [], sentences: [] };
       renderChapters(); showReader(); $('emptyCanvas').hidden = false;
       $('emptyCanvas').querySelector('h2').textContent = 'Canvas not found';
@@ -245,76 +210,11 @@ async function preparePrompt() {
     await copy(prompt, 'Prompt copied. Paste it into your AI and add your task.');
   } catch { message('Could not prepare the prompt. Try again.'); }
 }
-function updateKeyField() {
-  $('geminiKey').value = '';
-  $('geminiKey').required = !geminiKey;
-  $('geminiKey').placeholder = geminiKey ? `•••••••• ${geminiKey.slice(-4)}` : 'Paste your Gemini key';
-  $('forgetKey').hidden = !geminiKey;
-}
-function openKey() {
-  updateKeyField();
-  if (!$('keyDialog').open) $('keyDialog').showModal();
-  $('geminiKey').focus();
-}
 function saveSettings() {
   storage.set(settingsKey, { voice: $('voice').value, pace: $('pace').value, autoplay: player.getState().autoplay });
 }
 
-function renderChat(state = 'idle') {
-  if (state === 'idle') activeChat = null;
-  const row = document.querySelector('.action-row');
-  const activeButton = activeChat && $(activeChat === 'ask' ? 'askButton' : 'explainButton');
-  if (activeButton && !activeButton.classList.contains('is-feature-active')) {
-    const parent = row.getBoundingClientRect(), button = activeButton.getBoundingClientRect();
-    activeButton.style.setProperty('--feature-start-x', `${button.left + button.width / 2 - parent.left - parent.width / 2}px`);
-    activeButton.style.setProperty('--feature-start-y', `${button.top + button.height / 2 - parent.top - parent.height / 2}px`);
-  }
-  row.classList.toggle('has-feature-active', !!activeChat);
-  row.querySelector('.player-controls').inert = !!activeChat;
-  for (const type of ['ask', 'explain']) {
-    const button = $(type === 'ask' ? 'askButton' : 'explainButton'), selected = activeChat === type;
-    button.classList.toggle('is-feature-active', selected);
-    button.inert = !!activeChat && !selected;
-    for (const value of ['connecting', 'speaking', 'listening']) button.classList.toggle(`is-${value}`, selected && state === value);
-    if (selected) button.dataset.voiceState = state;
-    else {
-      delete button.dataset.voiceState;
-      button.style.removeProperty('--feature-start-x'); button.style.removeProperty('--feature-start-y');
-    }
-    button.setAttribute('aria-pressed', String(selected));
-    button.setAttribute('aria-label', selected ? `Stop ${type} voice chat` : type === 'ask' ? 'Ask about this sentence' : 'Explain this sentence');
-    button.querySelector('.speak-label').textContent = selected
-      ? ({ connecting: 'Connecting…', listening: 'Listening…', speaking: 'Speaking…' }[state] || 'End chat')
-      : type === 'ask' ? 'Ask' : 'Explain';
-  }
-  if (currentState) renderWords(currentState);
-}
-async function stopChat() {
-  const run = ++chatRun;
-  await conversation.stop();
-  if (run === chatRun) renderChat();
-  return run;
-}
-async function startChat(type) {
-  if (!currentState?.sentences.length) return;
-  pendingAction = '';
-  if (activeChat === type) { await stopChat(); return; }
-  const run = ++chatRun;
-  await conversation.stop();
-  if (run !== chatRun) return;
-  player.pause(); message('');
-  if (!geminiKey && conversation.requiresKey !== false) { pendingAction = type; openKey(); return; }
-  activeChat = type; renderChat('connecting');
-  const state = player.getState();
-  await conversation.start({ type, sentences: state.sentences, sentenceIndex: state.sentenceIndex, voice: state.voice, pace: state.pace });
-}
-async function readingAction(action) {
-  pendingAction = '';
-  const run = await stopChat();
-  if (run !== chatRun) return;
-  message('');
-  return action();
-}
+function readingAction(action) { message(''); return action(); }
 function toggleReading() {
   return readingAction(() => {
     const state = player.getState();
@@ -355,36 +255,11 @@ $('deleteCanvas').onclick = async () => {
     storage.set(`owner:${canvasId}`, null); $('promptDialog').close(); etag = null; await refresh();
   } catch { message('Could not delete the canvas. Try again.'); }
 };
-$('keyButton').onclick = openKey;
-$('closeKey').onclick = () => $('keyDialog').close();
-$('keyDialog').addEventListener('close', () => { $('geminiKey').value = ''; pendingAction = ''; });
-$('keyForm').addEventListener('submit', async event => {
-  event.preventDefault();
-  const value = $('geminiKey').value.trim();
-  if (value) geminiKey = value;
-  if (!geminiKey) return;
-  const saved = storage.set('gemini-key', geminiKey);
-  const resume = pendingAction; pendingAction = ''; $('geminiKey').value = '';
-  $('keyDialog').close(); message('');
-  if (resume === 'read') await readingAction(() => player.play());
-  else if (resume) await startChat(resume);
-  if (!saved && geminiKey) message('Your browser could not save the key. You will need to enter it again after closing or reloading this page.');
-});
-$('forgetKey').onclick = () => {
-  if (!storage.remove('gemini-key')) { message('Your browser could not remove the saved key. Try again.'); return; }
-  geminiKey = ''; $('geminiKey').value = '';
-  updateKeyField();
-  void stopChat();
-  void player.load(currentState?.sentences || [], { play: false, sentenceIndex: currentState?.sentenceIndex || 0, sessionId: canvasId });
-  $('keyDialog').close(); message('Gemini key removed from this browser.', true);
-};
 $('playButton').onclick = () => { void toggleReading(); };
 $('focusSentence').onclick = () => { void toggleReading(); };
 $('repeatButton').onclick = () => { void readingAction(() => player.replay()); };
 $('previousButton').onclick = () => { void readingAction(() => player.previous()); };
 $('nextButton').onclick = () => { void readingAction(() => player.next()); };
-$('askButton').onclick = () => { void startChat('ask'); };
-$('explainButton').onclick = () => { void startChat('explain'); };
 $('autoButton').onclick = () => {
   player.setAutoplay(!player.getState().autoplay); saveSettings();
   const state = player.getState();
@@ -415,7 +290,6 @@ document.addEventListener('click', event => {
   if (!event.target.closest('#canvasMenu')) $('canvasMenu').open = false;
 });
 document.addEventListener('keydown', event => {
-  if (event.key === 'Escape' && activeChat) { event.preventDefault(); void stopChat(); return; }
   if (event.key === 'Escape') { showChapters(false); $('canvasMenu').open = false; }
   if (event.target.closest('input, textarea, select, button, a') || document.querySelector('dialog[open]') || !currentState?.sentences.length) return;
   if (event.code === 'Space') { event.preventDefault(); void toggleReading(); }
@@ -424,14 +298,18 @@ document.addEventListener('keydown', event => {
 });
 document.addEventListener('visibilitychange', () => { if (!document.hidden) void refresh(); });
 window.addEventListener('online', () => void refresh());
-window.addEventListener('storage', event => {
-  if (event.key === 'canvas:gemini-key' || event.key === null) syncSpeechKey();
-});
-window.addEventListener('pageshow', syncSpeechKey);
-window.addEventListener('pagehide', () => {
-  void stopChat();
-  geminiKey = ''; $('geminiKey').value = '';
-  void player.load(currentState?.sentences || [], { play: false, sentenceIndex: currentState?.sentenceIndex || 0, sessionId: canvasId });
-});
+window.addEventListener('pagehide', () => player.pause());
 
+if (!canvasId && params.get('example') === '1') {
+  try {
+    const { data } = await request('/canvases', { method: 'POST', body: {
+      title: 'Free Kokoro speech test', language: 'en', chapters: [{ title: 'Listen and read', pages: [{ title: 'First steps',
+        text: 'This canvas uses the free Kokoro voice on our server. You do not need a key to listen. Read each sentence as the player speaks. You can pause, repeat a sentence, or move to the next one.',
+      }], subchapters: [] }],
+    } });
+    canvasId = data._id;
+    storage.set(`owner:${canvasId}`, { manage_code: data.manage_code, upload_code: data.upload_code, upload_expires_at: data.upload_expires_at });
+    history.replaceState(null, '', `?id=${encodeURIComponent(canvasId)}`);
+  } catch { message('Could not create the test canvas. Please try again.'); }
+}
 if (canvasId) { showReader(); void refresh(); }
