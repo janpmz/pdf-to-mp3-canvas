@@ -12,6 +12,7 @@ const request = apiRequest;
 const pollInterval = 3000;
 let canvas = null, model = { chapters: [], sentences: [], pages: [] }, currentState = null;
 let selectedId = '', renderedPageId = '', fullRows = [], highlighted = [];
+let focusSentenceId = '', focusWords = [], focusSwipe = null;
 let pollTimer, etag, refreshing = false, firstLoad = true;
 let lastSavedSentence = '', noticeTimer;
 const storage = {
@@ -71,13 +72,15 @@ function appendSentence(container, sentence) {
 function renderWords(state) {
   if (!state) return;
   for (const element of highlighted) element?.classList.remove('is-current');
-  highlighted = [fullRows[state.sentenceIndex]?.words[state.wordIndex]];
+  highlighted = [fullRows[state.sentenceIndex]?.words[state.wordIndex], focusWords[state.wordIndex]];
   for (const element of highlighted) element?.classList.add('is-current');
 }
 function render(state) {
   currentState = state;
   const sentence = state.sentences[state.sentenceIndex], hasText = Boolean(sentence);
   $('playButton').disabled = !hasText;
+  $('focusModeButton').disabled = !hasText;
+  if (!hasText && document.body.classList.contains('is-focus-mode')) setFocusMode(false, { moveFocus: false });
   $('repeatButton').disabled = !hasText;
   $('previousButton').disabled = !hasText || state.sentenceIndex === 0;
   $('nextButton').disabled = !hasText || state.sentenceIndex >= state.sentences.length - 1;
@@ -93,6 +96,7 @@ function render(state) {
   $('autoButton').setAttribute('aria-label', state.autoplay ? 'Turn auto play off' : 'Turn auto play on');
   $('autoButton').setAttribute('aria-pressed', String(state.autoplay));
   renderFullText();
+  updateFocusSentence();
   if (sentence?._id !== selectedId) {
     selectedId = sentence?._id || '';
     fullRows.forEach((row, index) => {
@@ -163,12 +167,46 @@ function showChapters(show) {
   }
 }
 function placeReaderTools() {
+  const focused = document.body.classList.contains('is-focus-mode');
+  const wideCard = !focused && controlsWide.matches;
+  const active = document.activeElement;
   showChapters(false);
-  if (sidebarWide.matches) $('playerCardBody').prepend($('chapterSidebar'));
+  if (!focused && sidebarWide.matches) $('playerCardBody').prepend($('chapterSidebar'));
   else document.body.append($('chapterSidebar'));
-  (controlsWide.matches ? $('readingSettings') : $('footerTools')).append($('autoButton'));
-  const settings = controlsWide.matches ? $('readingSettings') : $('menuReadingSettings');
+  (focused ? document.querySelector('.player-stage') : $('playerCard')).append($('playerFooter'));
+  if (wideCard) $('playerCardWindows').append($('focusModeButton'));
+  else $('playerFooter').prepend($('focusModeButton'));
+  (wideCard ? $('readingSettings') : $('footerTools')).append($('autoButton'));
+  const settings = wideCard ? $('readingSettings') : $('menuReadingSettings');
   settings.append($('voiceSetting'), $('paceSetting'));
+  if (active && [$("focusModeButton"), $("autoButton"), $("voiceSetting"), $("paceSetting")].some(node => node.contains(active))) active.focus({ preventScroll: true });
+}
+function updateFocusSentence() {
+  const sentence = currentState?.sentences[currentState.sentenceIndex];
+  if (focusSentenceId !== (sentence?._id || '')) {
+    focusSentenceId = sentence?._id || '';
+    focusWords = sentence ? appendSentence($('focusSentence'), sentence) : [];
+    if (!sentence) $('focusSentence').replaceChildren();
+    $('focusReader').scrollTop = 0;
+  }
+  renderWords(currentState);
+}
+function setFocusMode(enabled, { moveFocus = true } = {}) {
+  enabled = Boolean(enabled && currentState?.sentences.length);
+  focusSwipe = null;
+  $('canvasMenu').open = false;
+  showChapters(false);
+  document.body.classList.toggle('is-focus-mode', enabled);
+  document.body.classList.toggle('is-card-player', !enabled && !$('playerLayout').hidden);
+  $('focusReader').hidden = !enabled;
+  $('focusModeButton').setAttribute('aria-pressed', String(enabled));
+  const label = enabled ? 'Exit focus mode' : 'Enter focus mode';
+  $('focusModeButton').setAttribute('aria-label', label);
+  $('focusModeButton').title = label;
+  $('focusModeLabel').textContent = enabled ? 'Exit focus' : 'Focus';
+  placeReaderTools();
+  updateFocusSentence();
+  if (moveFocus) (enabled ? $('focusReader') : $('focusModeButton')).focus({ preventScroll: true });
 }
 sidebarWide.addEventListener('change', placeReaderTools);
 controlsWide.addEventListener('change', placeReaderTools);
@@ -198,7 +236,7 @@ function turnPage(direction) {
   if (next) return readingAction(() => player.selectSentence(next.startIndex));
 }
 function showReader() {
-  document.body.classList.add('is-card-player'); document.body.classList.remove('content-page');
+  document.body.classList.toggle('is-card-player', !document.body.classList.contains('is-focus-mode')); document.body.classList.remove('content-page');
   $('welcome').hidden = true; $('playerLayout').hidden = false; $('playerFooter').hidden = false;
   $('shareButton').hidden = false;
   $('promptButton').hidden = !owner(); $('emptyPrompt').hidden = !owner();
@@ -306,6 +344,8 @@ $('deleteCanvas').onclick = async () => {
   } catch { message('Could not delete the canvas. Try again.'); }
 };
 $('playButton').onclick = () => { void toggleReading(); };
+$('focusModeButton').onclick = () => setFocusMode($('focusReader').hidden);
+$('focusSentence').onclick = () => { void readingAction(() => player.replay()); };
 $('repeatButton').onclick = () => { void readingAction(() => player.replay()); };
 $('previousButton').onclick = () => { void readingAction(() => player.previous()); };
 $('nextButton').onclick = () => { void readingAction(() => player.next()); };
@@ -329,6 +369,9 @@ document.addEventListener('click', event => {
   if (!event.target.closest('#canvasMenu')) $('canvasMenu').open = false;
 });
 document.addEventListener('keydown', event => {
+  if (event.key === 'Escape' && !$('focusReader').hidden) {
+    event.preventDefault(); setFocusMode(false); return;
+  }
   if (event.key === 'Escape') { showChapters(false); $('canvasMenu').open = false; }
   if (event.key === 'Tab' && $('chapterSidebar').classList.contains('is-drawer-open')) {
     const buttons = [...$('chapterSidebar').querySelectorAll('button:not(:disabled)')];
@@ -337,11 +380,81 @@ document.addEventListener('keydown', event => {
     else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first?.focus(); }
     return;
   }
-  if (event.target.closest('input, textarea, select, button, a') || document.querySelector('dialog[open]') || !currentState?.sentences.length) return;
-  if (event.code === 'Space') { event.preventDefault(); void toggleReading(); }
-  if (event.key === 'ArrowRight') { event.preventDefault(); void readingAction(() => player.next()); }
-  if (event.key === 'ArrowLeft') { event.preventDefault(); void readingAction(() => player.previous()); }
+  if (event.target.closest('input, textarea, select, [contenteditable="true"]') || document.querySelector('dialog[open]') || $('canvasMenu').open || $('chapterSidebar').classList.contains('is-drawer-open') || !currentState?.sentences.length) return;
+  if (['ArrowRight', 'ArrowDown', 'ArrowLeft', 'ArrowUp'].includes(event.key)) {
+    event.preventDefault();
+    if (!event.repeat) handlePlayerArrow(event.key);
+  } else if (event.code === 'Space' && !event.target.closest('button:not(.sentence, .focus-sentence), a')) {
+    event.preventDefault(); void toggleReading();
+  }
 });
+function handlePlayerArrow(key) {
+  if (document.activeElement?.matches('button, a')) document.activeElement.blur();
+  void readingAction(() => ['ArrowRight', 'ArrowDown'].includes(key) ? player.next() : player.previous());
+}
+function canSwipeFocusReader() {
+  return !$('focusReader').hidden && !document.querySelector('dialog[open]') && Boolean(currentState?.sentences.length);
+}
+
+$('focusReader').addEventListener("touchstart", (event) => {
+  focusSwipe = null;
+  if (!canSwipeFocusReader() || event.touches.length !== 1) return;
+  const touch = event.touches[0];
+  focusSwipe = {
+    id: touch.identifier,
+    x: touch.clientX,
+    y: touch.clientY,
+    startedAt: event.timeStamp,
+    scrolling: false,
+    claimed: false,
+  };
+}, { passive: true });
+
+$('focusReader').addEventListener("touchmove", (event) => {
+  if (!focusSwipe) return;
+  if (!canSwipeFocusReader() || event.touches.length !== 1) {
+    focusSwipe = null;
+    return;
+  }
+  const touch = event.touches[0];
+  const dx = touch.clientX - focusSwipe.x;
+  const dy = touch.clientY - focusSwipe.y;
+  if (focusSwipe.scrolling || Math.max(Math.abs(dx), Math.abs(dy)) < 10) return;
+  if (!focusSwipe.claimed && Math.abs(dy) > Math.abs(dx)) {
+    const remainingScroll = $('focusReader').scrollHeight - $('focusReader').clientHeight - $('focusReader').scrollTop;
+    // Let a long sentence scroll until the reader reaches its edge.
+    if ((dy < 0 && remainingScroll > 1) || (dy > 0 && $('focusReader').scrollTop > 1)) {
+      focusSwipe.scrolling = true;
+      return;
+    }
+  }
+  if (!event.cancelable) {
+    focusSwipe = null;
+    return;
+  }
+  event.preventDefault();
+  focusSwipe.claimed = true;
+}, { passive: false });
+
+$('focusReader').addEventListener("touchend", (event) => {
+  const swipe = focusSwipe;
+  focusSwipe = null;
+  if (!swipe || swipe.scrolling || event.touches.length || !canSwipeFocusReader()) return;
+  const touch = [...event.changedTouches].find((item) => item.identifier === swipe.id);
+  if (!touch) return;
+  const dx = touch.clientX - swipe.x;
+  const dy = touch.clientY - swipe.y;
+  const distance = Math.max(Math.abs(dx), Math.abs(dy));
+  // A drag must not also replay the sentence through its tap handler.
+  if ((swipe.claimed || distance >= 10) && event.cancelable) event.preventDefault();
+  if (Math.abs(dy) < 40 || event.timeStamp - swipe.startedAt > 800) return;
+  if (Math.abs(dy) < Math.abs(dx) * 1.25) return;
+  // Swiping up moves forward; swiping down goes back.
+  handlePlayerArrow(dy < 0 ? "ArrowDown" : "ArrowUp");
+}, { passive: false });
+
+$('focusReader').addEventListener("touchcancel", () => { focusSwipe = null; });
+
 document.addEventListener('visibilitychange', () => { if (!document.hidden) void refresh(); });
 window.addEventListener('online', () => void refresh());
 window.addEventListener('pagehide', () => player.pause());

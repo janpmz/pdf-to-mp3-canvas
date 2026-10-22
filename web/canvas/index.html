@@ -9,8 +9,8 @@
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data:; connect-src 'self' http://localhost:8702 http://127.0.0.1:8702; base-uri 'none'; form-action 'none'; object-src 'none'" />
   <title>Canvas — PDF TO MP3</title>
   <link rel="icon" href="../favicon.ico" />
-  <link rel="stylesheet" href="./canvas.css?v=free-player-page-1" />
-  <script type="module" src="./canvas.js?v=free-player-page-1"></script>
+  <link rel="stylesheet" href="./canvas.css?v=free-player-focus-1" />
+  <script type="module" src="./canvas.js?v=free-player-focus-1"></script>
 </head>
 <body class="canvas-page player-page content-page">
   <main class="player-stage">
@@ -61,6 +61,7 @@
               <label id="voiceSetting" class="player-toolbar-control canvas-voice-setting">Voice <select id="voice" aria-label="Voice"></select></label>
               <label id="paceSetting" class="player-toolbar-control canvas-voice-setting">Speed <select id="pace" aria-label="Speed" disabled title="This test uses normal speed"><option value="normal" selected>Normal</option></select></label>
             </div>
+            <div id="playerCardWindows" class="player-card-windows"></div>
             <button id="chaptersButton" class="player-toolbar-control canvas-chapters-button" type="button" aria-expanded="false" aria-controls="chapterSidebar" hidden>Chapters</button>
             <details id="canvasMenu" class="toolbar-more-menu canvas-menu">
               <summary class="player-toolbar-control" aria-label="Canvas menu"><span class="player-toolbar-icon player-menu-icon" aria-hidden="true"></span></summary>
@@ -68,7 +69,6 @@
                 <div id="menuReadingSettings" class="canvas-menu-settings"></div>
                 <button class="toolbar-more-menu-link" id="promptButton" type="button" hidden>Copy prompt</button>
                 <button class="toolbar-more-menu-link" id="shareButton" type="button" hidden>Share</button>
-                <a class="toolbar-more-menu-link" href="./">New canvas</a>
                 <a class="toolbar-more-menu-link" href="./guide.html">Guide for AI agents</a>
               </nav>
             </details>
@@ -106,6 +106,16 @@
           </div>
         </div>
       <footer id="playerFooter" class="player-footer" hidden>
+        <button class="focus-mode-button player-toolbar-control" id="focusModeButton" type="button" aria-label="Enter focus mode" aria-pressed="false" aria-controls="focusReader" title="Enter focus mode">
+          <svg class="focus-enter-icon" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M8 4H4v4m12-4h4v4M4 16v4h4m12-4v4h-4" />
+          </svg>
+          <svg class="focus-exit-icon" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M4 8h4V4m12 4h-4V4M8 20v-4H4m12 4v-4h4" />
+          </svg>
+          <span id="focusModeLabel">Focus</span>
+          <span class="player-toolbar-icon player-focus-icon" aria-hidden="true"></span>
+        </button>
         <div class="action-row">
           <div class="player-controls" aria-label="Player controls">
             <button class="control" id="repeatButton" type="button" aria-label="Repeat sentence">
@@ -144,6 +154,9 @@
         <div id="footerTools" class="footer-tools" role="group" aria-label="Listening tools"></div>
       </footer>
       </div>
+    </div>
+    <div id="focusReader" class="focus-reader" tabindex="-1" hidden>
+      <button id="focusSentence" class="focus-sentence" type="button" aria-live="polite" aria-atomic="true"></button>
     </div>
   </main>
   <div id="chapterSidebarBackdrop" class="chapter-sidebar-backdrop" hidden></div>

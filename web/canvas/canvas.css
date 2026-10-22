@@ -4,15 +4,14 @@
 @import "../toolbar.css";
 @import "../reading-font.css";
 @import "../player-page.css";
-@import "./player-controls.css";
 @import "../connect-ai/setup.css";
 
 [hidden] { display: none !important; }
 body { font-family: "Site Inter", system-ui, sans-serif; }
 button, input, select, textarea { font: inherit; }
-.canvas-page .player-stage { --player-toolbar-height: calc(72px + env(safe-area-inset-top, 0px)); width: 100%; min-height: 100dvh; }
-.canvas-page:not(.is-card-player):not(.canvas-guide-page) .player-stage { height: 100dvh; overflow-y: auto; }
-.canvas-page:not(.is-card-player) .app-toolbar { position: absolute; inset: 0 0 auto; height: var(--player-toolbar-height); }
+.canvas-page:not(.is-focus-mode) .player-stage { --player-toolbar-height: calc(72px + env(safe-area-inset-top, 0px)); width: 100%; min-height: 100dvh; }
+.canvas-page:not(.is-card-player):not(.is-focus-mode):not(.canvas-guide-page) .player-stage { height: 100dvh; overflow-y: auto; }
+.canvas-page:not(.is-card-player):not(.is-focus-mode) .app-toolbar { position: absolute; inset: 0 0 auto; height: var(--player-toolbar-height); }
 .canvas-menu { display: block; margin: 0; }
 .canvas-menu summary { list-style: none; }
 .canvas-menu summary::-webkit-details-marker { display: none; }
