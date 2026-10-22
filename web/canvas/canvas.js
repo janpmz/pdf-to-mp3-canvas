@@ -92,7 +92,6 @@ function render(state) {
   $('autoButton').classList.toggle('tool-item-active', state.autoplay);
   $('autoButton').setAttribute('aria-label', state.autoplay ? 'Turn auto play off' : 'Turn auto play on');
   $('autoButton').setAttribute('aria-pressed', String(state.autoplay));
-  $('chapterName').textContent = sentence?.chapterTitle || '';
   if (sentence?._id !== selectedId) {
     selectedId = sentence?._id || '';
     fullRows.forEach((row, index) => {
@@ -153,7 +152,7 @@ function renderChapters() {
   $('chaptersButton').hidden = !model.chapters.length;
 }
 function showReader() {
-  $('welcome').hidden = true; $('reader').hidden = false; $('playerFooter').hidden = false;
+  $('welcome').hidden = true; $('playerFooter').hidden = false;
   $('shareButton').hidden = false;
   $('promptButton').hidden = !owner(); $('emptyPrompt').hidden = !owner();
 }
@@ -165,7 +164,6 @@ async function refresh() {
     if (result.unchanged) return;
     canvas = result.data; etag = result.tag; model = canvasSentences(canvas);
     document.title = `${canvas.title} — PDF TO MP3 Canvas`; document.documentElement.lang = canvas.language;
-    $('canvasName').textContent = canvas.title;
     if (firstLoad) updateVoices(canvas.language);
     showReader();
     const empty = !model.sentences.length;
