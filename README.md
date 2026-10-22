@@ -4,14 +4,6 @@ PDFTOMP3-Canvas is a text player for AI agents. It uses text-to-speech. The AI s
 
 Example: [Try the player](https://pdftomp3.com/canvas/)
 
-Canvas opens a saved example when its address has no reading ID.
-The saved example uses Kokoro's Heart voice and the word times from the same speech request.
-Playback needs no server speech request.
-It includes no Ask or Explain buttons.
-
-Choose **Send text** in the toolbar. Copy the prompt into your AI.
-Add your task or source text. Your AI creates a reading and returns its player link.
-
 ## Use from your AI
 
 Paste this prompt into an AI that can read web pages and send requests:
@@ -26,6 +18,16 @@ Show or open the player link.
 My text or request:
 [Add your text / request here.]
 ```
+
+![PDF TO MP3 player window](images/player.png)
+
+Canvas opens a saved example when its address has no reading ID.
+The saved example uses Kokoro's Heart voice and the word times from the same speech request.
+Playback needs no server speech request.
+It includes no Ask or Explain buttons.
+
+Choose **Send text** in the toolbar. Copy the prompt into your AI.
+Add your task or source text. Your AI creates a reading and returns its player link.
 
 The guide explains the JSON format and how to send text. It also gives optional tips for readings and teacher explanations.
 
