@@ -9,8 +9,8 @@
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data:; connect-src 'self' http://localhost:8702 http://127.0.0.1:8702; base-uri 'none'; form-action 'none'; object-src 'none'" />
   <title>Canvas — PDF TO MP3</title>
   <link rel="icon" href="../favicon.ico" />
-  <link rel="stylesheet" href="./canvas.css?v=free-focus-controls-2" />
-  <script type="module" src="./canvas.js?v=free-focus-controls-2"></script>
+  <link rel="stylesheet" href="./canvas.css?v=free-chapters-menu-1" />
+  <script type="module" src="./canvas.js?v=free-chapters-menu-1"></script>
 </head>
 <body class="canvas-page player-page content-page">
   <main class="player-stage">
@@ -69,6 +69,7 @@
               <summary class="player-toolbar-control toolbar-more-menu-button" aria-label="Canvas menu"><span class="player-toolbar-icon player-menu-icon" aria-hidden="true"></span></summary>
               <nav class="toolbar-more-menu-panel" aria-label="Canvas">
                 <div id="menuReadingSettings" class="canvas-menu-settings"></div>
+                <button class="toolbar-more-menu-link" id="menuChaptersButton" type="button" aria-haspopup="dialog" aria-controls="chapterPicker" aria-expanded="false" hidden>Chapters</button>
                 <button class="toolbar-more-menu-link" id="promptButton" type="button" hidden>Copy prompt</button>
                 <button class="toolbar-more-menu-link" id="shareButton" type="button" hidden>Share</button>
                 <a class="toolbar-more-menu-link" href="./guide.html">Guide for AI agents</a>
@@ -163,6 +164,15 @@
     </div>
   </main>
   <div id="chapterSidebarBackdrop" class="chapter-sidebar-backdrop" hidden></div>
+  <dialog class="chapter-picker" id="chapterPicker" role="dialog" aria-labelledby="pickerTitle">
+    <header class="picker-header">
+      <h2 id="pickerTitle">Chapters</h2>
+      <button class="picker-close" id="pickerClose" type="button" aria-label="Close chapters">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18" /></svg>
+      </button>
+    </header>
+    <div class="picker-list chapter-picker-list" id="chapterPickerList"></div>
+  </dialog>
   <p id="message" class="canvas-notice" role="status" aria-live="polite" hidden></p>
   <dialog id="promptDialog" class="canvas-dialog prompt-dialog subscription-main subscription-card" role="dialog" aria-labelledby="promptTitle">
     <div class="dialog-heading"><h2 id="promptTitle">Prompt for your AI</h2><button class="subscription-button" id="closePrompt" type="button">Close</button></div>

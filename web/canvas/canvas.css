@@ -26,6 +26,11 @@ button, input, select, textarea { font: inherit; }
 .canvas-menu .toolbar-more-menu-link { width: 100%; border: 0; background: transparent; text-align: left; cursor: pointer; }
 .canvas-voice-setting select { min-width: 0; max-width: 110px; height: 36px; padding: 0; border: 0; color: inherit; background: transparent; font: inherit; cursor: pointer; }
 .canvas-menu-settings:empty { display: none; }
+.canvas-page dialog.chapter-picker { position: fixed; margin: 0; max-width: calc(100vw - 32px); max-height: calc(100dvh - 32px); }
+.canvas-page dialog.chapter-picker:not([open]) { display: none; }
+.canvas-page dialog.chapter-picker::backdrop { background: rgb(255 255 255 / 18%); backdrop-filter: blur(2px); }
+.canvas-page .chapter-picker-list .chapter-option { width: calc(100% - var(--depth, 0) * 26px); margin-left: calc(var(--depth, 0) * 26px); }
+.canvas-page .chapter-picker-list .chapter-option:disabled { opacity: .5; cursor: default; }
 .canvas-menu-settings .canvas-voice-setting { display: flex; justify-content: space-between; padding: 8px 12px; color: #4f596a; font: 500 13px/20px "Site Inter", system-ui, sans-serif; }
 .canvas-page .chapter-sidebar-option { width: calc(100% - var(--depth, 0) * 12px); margin-left: calc(var(--depth, 0) * 12px); text-align: left; cursor: pointer; }
 .canvas-page .chapter-sidebar-option:disabled { opacity: .5; cursor: default; }
@@ -35,7 +40,10 @@ button, input, select, textarea { font: inherit; }
 .control-play .loading-icon { display: none; }
 .control-play.is-loading .loading-icon { display: inline-block; color: currentColor; }
 .control-play.is-loading :is(.play-icon, .pause-icon) { display: none; }
-@media (min-width: 721px) { .canvas-page .canvas-chapters-button { display: none; } }
+@media (min-width: 721px) {
+  .canvas-page .canvas-chapters-button { display: none; }
+  .canvas-page dialog.chapter-picker { left: auto; }
+}
 @media (max-width: 720px) {
   .canvas-page .player-card-position .chapter-position-label { display: none; }
   .canvas-page .player-card-header { gap: 4px; }

@@ -104,7 +104,7 @@ function render(state) {
       row.button.setAttribute('aria-current', String(index === state.sentenceIndex));
     });
     fullRows[state.sentenceIndex]?.button.scrollIntoView({ block: 'nearest' });
-    for (const button of $('chapterList').querySelectorAll('button')) {
+    for (const button of document.querySelectorAll('#chapterList button, #chapterPickerList button')) {
       const selected = button.dataset.chapterId === sentence?.chapterId;
       button.setAttribute('aria-current', String(selected));
       button.classList.toggle('is-selected', selected);
@@ -166,6 +166,16 @@ function showChapters(show) {
     if (document.activeElement?.closest('#chapterSidebar') && !sidebarWide.matches) $('chaptersButton').focus();
   }
 }
+function openChapterPicker() {
+  if (!model.chapters.length) return;
+  showChapters(false);
+  $('canvasMenu').open = false;
+  $('chapterPicker').showModal();
+  $('menuChaptersButton').setAttribute('aria-expanded', 'true');
+  const selected = $('chapterPickerList').querySelector('.is-selected');
+  selected?.scrollIntoView({ block: 'nearest' });
+  (selected || $('pickerClose')).focus({ preventScroll: true });
+}
 function placeReaderTools() {
   const focused = document.body.classList.contains('is-focus-mode');
   const wideCard = !focused && controlsWide.matches;
@@ -215,23 +225,34 @@ sidebarWide.addEventListener('change', placeReaderTools);
 controlsWide.addEventListener('change', placeReaderTools);
 placeReaderTools();
 function renderChapters() {
-  const fragment = document.createDocumentFragment();
-  for (const chapter of model.chapters) {
-    const button = document.createElement('button'); button.type = 'button'; button.className = 'chapter-option chapter-sidebar-option';
-    button.classList.toggle('is-direct', chapter.depth === 0);
-    const title = document.createElement('span'); title.className = 'chapter-option-title'; title.textContent = chapter.title;
-    button.append(title);
-    button.style.setProperty('--depth', chapter.depth); button.dataset.chapterId = chapter.id;
-    button.disabled = chapter.startIndex === chapter.endIndex;
-    const selected = chapter.id === currentState?.sentences[currentState.sentenceIndex]?.chapterId;
-    button.setAttribute('aria-current', String(selected)); button.classList.toggle('is-selected', selected);
-    button.addEventListener('click', () => { void readingAction(() => player.selectSentence(chapter.startIndex)); showChapters(false); });
-    fragment.append(button);
+  for (const [listId, sidebar] of [['chapterList', true], ['chapterPickerList', false]]) {
+    const fragment = document.createDocumentFragment();
+    for (const chapter of model.chapters) {
+      const button = document.createElement('button'); button.type = 'button';
+      button.className = sidebar ? 'chapter-option chapter-sidebar-option' : 'chapter-option';
+      button.classList.toggle('is-direct', chapter.depth === 0);
+      const title = document.createElement('span'); title.className = 'chapter-option-title'; title.textContent = chapter.title;
+      button.append(title);
+      button.style.setProperty('--depth', chapter.depth); button.dataset.chapterId = chapter.id;
+      button.disabled = chapter.startIndex === chapter.endIndex;
+      const selected = chapter.id === currentState?.sentences[currentState.sentenceIndex]?.chapterId;
+      button.setAttribute('aria-current', String(selected)); button.classList.toggle('is-selected', selected);
+      button.addEventListener('click', () => {
+        void readingAction(() => player.selectSentence(chapter.startIndex));
+        showChapters(false);
+        if ($('chapterPicker').open) $('chapterPicker').close();
+      });
+      fragment.append(button);
+    }
+    $(listId).replaceChildren(fragment);
   }
-  $('chapterList').replaceChildren(fragment);
   $('chaptersButton').hidden = !model.chapters.length;
+  $('menuChaptersButton').hidden = !model.chapters.length;
   $('chapterSidebar').hidden = !model.chapters.length;
-  if (!model.chapters.length) showChapters(false);
+  if (!model.chapters.length) {
+    showChapters(false);
+    if ($('chapterPicker').open) $('chapterPicker').close();
+  }
 }
 function turnPage(direction) {
   const page = canvasPage(model, player.getState().sentenceIndex);
@@ -365,6 +386,17 @@ $('voice').onchange = () => { void readingAction(() => player.setVoice($('voice'
 $('pace').onchange = () => { void readingAction(() => player.setPace($('pace').value)); saveSettings(); };
 $('chaptersButton').onclick = () => showChapters(!$('chapterSidebar').classList.contains('is-drawer-open'));
 $('closeChapters').onclick = () => showChapters(false);
+$('menuChaptersButton').onclick = openChapterPicker;
+$('pickerClose').onclick = () => $('chapterPicker').close();
+$('chapterPicker').addEventListener('close', () => {
+  $('menuChaptersButton').setAttribute('aria-expanded', 'false');
+  $('canvasMenu').querySelector('summary').focus({ preventScroll: true });
+});
+$('chapterPicker').addEventListener('click', event => {
+  if (event.target !== $('chapterPicker')) return;
+  const bounds = $('chapterPicker').getBoundingClientRect();
+  if (event.clientX < bounds.left || event.clientX > bounds.right || event.clientY < bounds.top || event.clientY > bounds.bottom) $('chapterPicker').close();
+});
 $('chapterSidebarBackdrop').onclick = () => showChapters(false);
 $('previousPageButton').onclick = () => { void turnPage(-1); };
 $('nextPageButton').onclick = () => { void turnPage(1); };
@@ -376,10 +408,17 @@ document.addEventListener('click', event => {
   if (!event.target.closest('#canvasMenu')) $('canvasMenu').open = false;
 });
 document.addEventListener('keydown', event => {
-  if (event.key === 'Escape' && !$('focusReader').hidden) {
-    event.preventDefault(); setFocusMode(false); return;
+  if (event.key === 'Escape') {
+    if (document.querySelector('dialog[open]')) return;
+    if ($('chapterSidebar').classList.contains('is-drawer-open')) {
+      event.preventDefault(); showChapters(false); return;
+    }
+    if ($('canvasMenu').open) {
+      event.preventDefault(); $('canvasMenu').open = false;
+      $('canvasMenu').querySelector('summary').focus({ preventScroll: true }); return;
+    }
+    if (!$('focusReader').hidden) { event.preventDefault(); setFocusMode(false); return; }
   }
-  if (event.key === 'Escape') { showChapters(false); $('canvasMenu').open = false; }
   if (event.key === 'Tab' && $('chapterSidebar').classList.contains('is-drawer-open')) {
     const buttons = [...$('chapterSidebar').querySelectorAll('button:not(:disabled)')];
     const first = buttons[0], last = buttons.at(-1);
