@@ -127,7 +127,7 @@ export function createSentencePlayer(options = {}) {
       record.usedAt = ++lastUse;
       return record;
     }
-    const record = { chunks: [], bytes: 0, usedAt: ++lastUse, saving: false, sampleRate: OUTPUT_SAMPLE_RATE, complete: false, controller: new AbortController(), error: null };
+    const record = { chunks: [], bytes: 0, usedAt: ++lastUse, saving: false, sampleRate: OUTPUT_SAMPLE_RATE, complete: false, wordTimings: null, controller: new AbortController(), error: null };
     const run = selectionRun;
     const speechOptions = { voice, pace, sessionId, sentenceId: sentences[index]._id };
     records.set(index, record);
@@ -140,14 +140,16 @@ export function createSentencePlayer(options = {}) {
         if (cached) {
           record.chunks = cached.chunks;
           record.sampleRate = cached.sampleRate;
+          record.wordTimings = cached.wordTimings ?? null;
           record.bytes = cached.chunks.reduce((sum, chunk) => sum + chunk.byteLength, 0);
         } else {
           await speech.stream(sentences[index].text, {
             ...speechOptions,
             signal: record.controller.signal,
-            onChunk: (samples, sampleRate) => {
+            onChunk: (samples, sampleRate, metadata) => {
               if (record.controller.signal.aborted || run !== selectionRun) return;
               record.sampleRate = sampleRate;
+              if (metadata?.wordTimings) record.wordTimings = metadata.wordTimings;
               record.chunks.push(samples);
               record.bytes += samples.byteLength;
               trimMemory();
@@ -210,18 +212,26 @@ export function createSentencePlayer(options = {}) {
       prefetch();
       const current = state();
       const words = sentences[sentenceIndex]?.words || [];
-      // Live returns no word times. Use the audio clock and spread words by length.
-      const weights = words.map((word) => Math.max(2, word.text.length));
-      const total = weights.reduce((sum, weight) => sum + weight, 0);
-      const target = Math.min(1, current.position / Math.max(0.001, current.duration)) * total;
-      let sum = 0;
-      let nextWord = words.length ? 0 : -1;
-      for (let index = 0; index < weights.length; index += 1) {
-        if (sum > target) break;
-        nextWord = index;
-        sum += weights[index];
+      if (Array.isArray(activeRecord?.wordTimings) || options.requireWordTimings) {
+        wordIndex = -1;
+        for (const word of activeRecord?.wordTimings || []) {
+          if (word.start > current.position) break;
+          if (current.position < word.end) wordIndex = word.index;
+        }
+      } else {
+        // Legacy Gemini speech has no word times. Free speech never uses this estimate.
+        const weights = words.map((word) => Math.max(2, word.text.length));
+        const total = weights.reduce((sum, weight) => sum + weight, 0);
+        const target = Math.min(1, current.position / Math.max(0.001, current.duration)) * total;
+        let sum = 0;
+        let nextWord = words.length ? 0 : -1;
+        for (let index = 0; index < weights.length; index += 1) {
+          if (sum > target) break;
+          nextWord = index;
+          sum += weights[index];
+        }
+        wordIndex = Math.max(wordIndex, nextWord);
       }
-      wordIndex = Math.max(wordIndex, nextWord);
     }
     onProgress(state());
   }
@@ -236,7 +246,8 @@ export function createSentencePlayer(options = {}) {
     } else {
       desiredPlaying = false;
       status = "ended";
-      wordIndex = Math.max(-1, (sentences[sentenceIndex]?.words.length || 0) - 1);
+      wordIndex = options.requireWordTimings || Array.isArray(activeRecord?.wordTimings) ? -1
+        : Math.max(-1, (sentences[sentenceIndex]?.words.length || 0) - 1);
       stopTick();
       emit();
     }

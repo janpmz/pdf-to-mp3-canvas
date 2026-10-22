@@ -65,7 +65,7 @@ Content-Type: application/json
       <li>Subchapters use the same shape as chapters, up to three levels. A parent may have <code>pages: []</code>. Its pages play before its subchapters.</li>
       <li>Keep headings in title fields and formatting marks or performance notes outside the spoken words.</li>
       <li>If source and spoken wording differ, add <code>spoken_text</code> to the page alongside source <code>text</code>. Canvas reads <code>spoken_text</code> instead.</li>
-      <li>Do not supply IDs, sentence lists, audio, or word timings. The server splits sentences with ordinary code and assigns IDs. The browser estimates word timings.</li>
+      <li>Do not supply IDs, sentence lists, audio, or word timings. The server splits sentences with ordinary code and assigns IDs. The server requests word times from Kokoro when the language supports them.</li>
     </ul>
     <p>Limits: 100 chapters including subchapters, 100 pages per chapter, 20,000 characters per page field, 20,000 sentences, and 500,000 source plus spoken characters per canvas. Each request must fit within 1 MiB.</p>
     <h2>2. Long works and changes</h2>
@@ -91,7 +91,8 @@ Content-Type: application/json
     <ul>
       <li>The server sends the current sentence to its free Kokoro service. The user needs no key.</li>
       <li>Speech starts when the user presses Play. Canvas prepares up to two more sentences, within 120 words.</li>
-      <li>Audio is saved in the browser for repeat listening. A small, short-lived server cache avoids repeat jobs.</li>
+      <li>Word highlights use Kokoro’s times. Languages without word times play without word highlights.</li>
+      <li>Audio and word times are saved in the browser for repeat listening. A small, short-lived server cache avoids repeat jobs.</li>
       <li>This test uses normal speed. Ask and Explain are not part of this branch.</li>
     </ul>
     <h2>Optional writing guide</h2>

@@ -24,7 +24,7 @@ const settings = storage.get(settingsKey, {});
 $('pace').value = 'normal';
 const player = createSentencePlayer({
   voice: settings.voice, defaultVoice: 'af_heart', voices: FREE_VOICES.map(item => item.id), pace: 'normal',
-  prefetchWithoutAutoplay: true, speech: createFreeSpeech({ apiBase }), cacheKey: freeAudioCacheKey,
+  prefetchWithoutAutoplay: true, requireWordTimings: true, speech: createFreeSpeech({ apiBase }), cacheKey: freeAudioCacheKey,
   onStateChange: render, onProgress: renderWords, onError: text => message(text),
 });
 player.setAutoplay(settings.autoplay !== false);

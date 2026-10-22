@@ -17,14 +17,15 @@ export function encodeCachedAudio(audio) {
   for (const chunk of audio.chunks) {
     for (const sample of chunk) pcm[offset++] = Math.max(-32768, Math.min(32767, Math.round(sample * 32768)));
   }
-  return { pcm, sampleRate: audio.sampleRate, bytes: pcm.byteLength };
+  const wordTimings = audio.wordTimings ?? null;
+  return { pcm, sampleRate: audio.sampleRate, wordTimings, bytes: pcm.byteLength + JSON.stringify(wordTimings).length * 2 };
 }
 
 export function decodeCachedAudio(record) {
   if (!(record?.pcm instanceof Int16Array) || !record.pcm.length || !Number.isFinite(record.sampleRate) || record.sampleRate <= 0) return null;
   const samples = new Float32Array(record.pcm.length);
   for (let index = 0; index < samples.length; index += 1) samples[index] = record.pcm[index] / 32768;
-  return { chunks: [samples], sampleRate: record.sampleRate };
+  return { chunks: [samples], sampleRate: record.sampleRate, wordTimings: record.wordTimings ?? null };
 }
 
 export function createAudioCache({ indexedDB = globalThis.indexedDB, maxBytes = MAX_BYTES, maxEntries = MAX_ENTRIES,

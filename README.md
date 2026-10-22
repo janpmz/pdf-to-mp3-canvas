@@ -19,7 +19,7 @@ The [AI guide](http://localhost:3000/canvas/guide.html) covers text uploads. Tex
 
 The browser requests speech for a saved sentence. The server reads that sentence, checks the voice against the reading language, queues Kokoro, checks its progress, and returns 24 kHz mono PCM sound. The service key stays on the server. The browser never talks to Google or asks for a key.
 
-Playback waits for the current sentence, then prepares up to two more within a 120-word limit. Repeat uses saved audio. A bounded server cache reuses recent sound. Both sites still share the existing speech queue, so other jobs can delay this test. Word highlighting remains an estimate from the audio clock.
+Playback waits for the current sentence, then prepares up to two more within a 120-word limit. Repeat uses saved audio. A bounded server cache reuses recent sound. Both sites still share the existing speech queue, so other jobs can delay this test. Word highlights use Kokoro’s word start and end times, checked against the audio length and file hash. The browser saves those times with the sound. If the service has no word times for a language, the sentence still plays without word highlights.
 
 `node/src/canvas/freeSpeech.js` handles the service. `web/canvas/free-speech.js` plays its replies. The voice list comes unchanged from the existing `freetts/node/src/voices.js` in the local free speech project.
 

@@ -47,7 +47,9 @@ function createCanvasRouter({ getDb, websiteUrl, now = Date.now, rateLimit = tru
         const { voice } = resolveVoiceAndLang(body.voice ? { voice: body.voice } : { lang: canvas.language })
         const language = getCatalog().languages.find(item => item.voices.includes(voice)).tag.split('-')[0]
         if (language !== canvas.language.split('-')[0]) return res.status(400).json({ error: 'Choose a voice in the reading language.' })
-        const pcm = await speech.synthesize(sentence.text, voice, canvas._id)
+        const { pcm, words } = await speech.synthesize(sentence.text, voice, canvas._id)
+        if (req.get('Accept') === 'application/json') return res.json({ sample_rate: SAMPLE_RATE,
+            audio: pcm.toString('base64'), words, timing_source: words.length ? 'kokoro' : null })
         res.set({ 'Content-Type': `audio/pcm;rate=${SAMPLE_RATE};channels=1`, 'X-Content-Type-Options': 'nosniff' }).send(pcm)
     }))
     router.post('/canvases', run(async (req, res) => res.status(201).json(await store.create(req.body))))

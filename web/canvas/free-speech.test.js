@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { createFreeSpeech, decodeFreePcm, freeAudioCacheKey } from './free-speech.js';
+import { createFreeSpeech, decodeFreePcm, freeAudioCacheKey, mapWordTimes } from './free-speech.js';
 import { createSentencePlayer } from './sentence-player.js';
 import { FakeAudioContext, FakeAudioWorkletNode } from './test/pcm-audio.js';
 
@@ -8,10 +8,12 @@ test('the browser sends only a voice for a saved sentence and decodes the server
   const calls = [], chunks = [];
   const speech = createFreeSpeech({ apiBase: 'http://localhost:3000/canvas-api', fetchImpl: async (url, init) => {
     calls.push({ url, ...init });
-    return new Response(new Uint8Array([0, 0, 0, 64, 0, 192]), { headers: { 'Content-Type': 'audio/pcm;rate=24000;channels=1' } });
+    return Response.json({ sample_rate: 24000, audio: Buffer.from([0, 0, 0, 64, 0, 192]).toString('base64'),
+      timing_source: 'kokoro', words: [{ text: 'Read', start: 0, end: 3 / 24000 }] });
   } });
-  await speech.stream('Text stays out of this request.', { sessionId: 'canvas-a', sentenceId: 'sentence-a', voice: 'af_heart',
-    onChunk: (samples, rate) => { chunks.push([...samples]); assert.equal(rate, 24000); } });
+  await speech.stream('Read', { sessionId: 'canvas-a', sentenceId: 'sentence-a', voice: 'af_heart',
+    onChunk: (samples, rate, metadata) => { chunks.push([...samples]); assert.equal(rate, 24000);
+      assert.deepEqual(metadata.wordTimings, [{ index: 0, start: 0, end: 3 / 24000 }]); } });
   assert.equal(calls[0].url, 'http://localhost:3000/canvas-api/canvases/canvas-a/sentences/sentence-a/speech');
   assert.deepEqual(JSON.parse(calls[0].body), { voice: 'af_heart' });
   assert.equal(calls[0].credentials, 'omit');
@@ -41,4 +43,14 @@ test('the sentence player passes Kokoro voice and stored sentence ID without ask
   assert.equal(calls.length, 0);
   await player.setVoice('af_bella'); await player.play(); await new Promise(resolve => setImmediate(resolve));
   assert.equal(calls[0].voice, 'af_bella'); assert.equal(calls[0].sentenceId, 'sentence-a'); assert.equal(calls[0].sessionId, 'canvas-a');
+});
+
+
+test('word times map contractions and punctuation to displayed words without making up times', () => {
+  assert.deepEqual(mapWordTimes("Don't rush, café.", [
+    { text: 'Do', start: .1, end: .2 }, { text: "n't", start: .2, end: .4 },
+    { text: 'rush', start: 1, end: 1.1 }, { text: 'café', start: 1.2, end: 1.8 },
+  ], 2), [{ index: 0, start: .1, end: .4 }, { index: 1, start: 1, end: 1.1 }, { index: 2, start: 1.2, end: 1.8 }]);
+  assert.deepEqual(mapWordTimes('Read.', [{ text: 'Different', start: 0, end: .5 }], 1), []);
+  assert.deepEqual(mapWordTimes('Read.', [{ text: 'Read', start: -1, end: .5 }], 1), []);
 });
