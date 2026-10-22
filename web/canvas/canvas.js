@@ -92,6 +92,8 @@ function render(state) {
   $('autoButton').classList.toggle('tool-item-active', state.autoplay);
   $('autoButton').setAttribute('aria-label', state.autoplay ? 'Turn auto play off' : 'Turn auto play on');
   $('autoButton').setAttribute('aria-pressed', String(state.autoplay));
+  $('chapterName').textContent = sentence?.chapterTitle || '';
+  $('readingHeading').hidden = !sentence?.chapterTitle;
   if (sentence?._id !== selectedId) {
     selectedId = sentence?._id || '';
     fullRows.forEach((row, index) => {
