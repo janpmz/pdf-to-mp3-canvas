@@ -11,8 +11,8 @@ let canvasId = params.get('id') || '';
 const request = apiRequest;
 const pollInterval = 3000;
 let canvas = null, model = { chapters: [], sentences: [] }, currentState = null;
-let focusedId = '', focusedWords = [], fullRows = [], highlighted = [];
-let focus = true, pollTimer, etag, refreshing = false, firstLoad = true;
+let selectedId = '', fullRows = [], highlighted = [];
+let pollTimer, etag, refreshing = false, firstLoad = true;
 let lastSavedSentence = '', noticeTimer;
 const storage = {
   get(key, fallback) { try { return JSON.parse(localStorage.getItem(`canvas:${key}`)) ?? fallback; } catch { return fallback; } },
@@ -71,7 +71,7 @@ function appendSentence(container, sentence) {
 function renderWords(state) {
   if (!state) return;
   for (const element of highlighted) element?.classList.remove('is-current');
-  highlighted = [focusedWords[state.wordIndex], fullRows[state.sentenceIndex]?.words[state.wordIndex]];
+  highlighted = [fullRows[state.sentenceIndex]?.words[state.wordIndex]];
   for (const element of highlighted) element?.classList.add('is-current');
 }
 function render(state) {
@@ -93,11 +93,13 @@ function render(state) {
   $('autoButton').setAttribute('aria-label', state.autoplay ? 'Turn auto play off' : 'Turn auto play on');
   $('autoButton').setAttribute('aria-pressed', String(state.autoplay));
   $('chapterName').textContent = sentence?.chapterTitle || '';
-  if (sentence?._id !== focusedId) {
-    focusedId = sentence?._id || '';
-    focusedWords = sentence ? appendSentence($('focusSentence'), sentence) : [];
-    if (!sentence) $('focusSentence').replaceChildren();
-    fullRows.forEach((row, index) => row.button.classList.toggle('is-selected', index === state.sentenceIndex));
+  if (sentence?._id !== selectedId) {
+    selectedId = sentence?._id || '';
+    fullRows.forEach((row, index) => {
+      row.button.classList.toggle('is-selected', index === state.sentenceIndex);
+      row.button.setAttribute('aria-current', String(index === state.sentenceIndex));
+    });
+    fullRows[state.sentenceIndex]?.button.scrollIntoView({ block: 'nearest' });
     for (const button of $('chapterList').querySelectorAll('button')) {
       const selected = button.dataset.chapterId === sentence?.chapterId;
       button.setAttribute('aria-current', String(selected));
@@ -115,11 +117,14 @@ function renderFullText() {
   for (const [index, sentence] of (currentState?.sentences || []).entries()) {
     const button = document.createElement('button'); button.type = 'button'; button.className = 'sentence';
     button.classList.toggle('is-selected', currentState.sentenceIndex === index);
+    button.setAttribute('aria-current', String(currentState.sentenceIndex === index));
     const words = appendSentence(button, sentence);
     button.addEventListener('click', () => { void readingAction(() => player.selectSentence(index)); });
     fullRows.push({ button, words }); fragment.append(button);
   }
   $('fullReader').replaceChildren(fragment);
+  fullRows[currentState?.sentenceIndex]?.button.scrollIntoView({ block: 'nearest' });
+  renderWords(currentState);
 }
 function showChapters(show) {
   const dialog = $('chapterSidebar');
@@ -148,7 +153,6 @@ function renderChapters() {
   $('chaptersButton').hidden = !model.chapters.length;
 }
 function showReader() {
-  document.body.classList.toggle('is-focus-mode', focus);
   $('welcome').hidden = true; $('reader').hidden = false; $('playerFooter').hidden = false;
   $('shareButton').hidden = false;
   $('promptButton').hidden = !owner(); $('emptyPrompt').hidden = !owner();
@@ -165,8 +169,8 @@ async function refresh() {
     if (firstLoad) updateVoices(canvas.language);
     showReader();
     const empty = !model.sentences.length;
-    $('emptyCanvas').hidden = !empty; $('focusReader').hidden = empty || !focus;
-    $('fullReader').hidden = empty || focus; $('readingSettings').hidden = empty;
+    $('emptyCanvas').hidden = !empty;
+    $('fullReader').hidden = empty; $('readingSettings').hidden = empty;
     if (firstLoad) {
       const saved = storage.get(`position:${canvasId}`, '');
       const index = Math.max(0, model.sentences.findIndex(sentence => sentence._id === saved));
@@ -174,14 +178,14 @@ async function refresh() {
       firstLoad = false;
     } else await player.updateSentences(model.sentences, { sessionId: canvasId });
     renderChapters();
-    if (!focus) renderFullText();
+    renderFullText();
   } catch (error) {
     if (error.status === 404) {
       await player.load([], { play: false }); model = { chapters: [], sentences: [] };
       renderChapters(); showReader(); $('emptyCanvas').hidden = false;
       $('emptyCanvas').querySelector('h2').textContent = 'Canvas not found';
       $('emptyMessage').textContent = 'Check the link. The canvas may have been deleted.';
-      $('emptyTip').hidden = true; $('focusReader').hidden = true; $('fullReader').hidden = true;
+      $('emptyTip').hidden = true; $('fullReader').hidden = true;
       $('readingSettings').hidden = true; $('emptyPrompt').hidden = true; $('promptButton').hidden = true;
       clearTimeout(pollTimer); canvasId = '';
     } else message('Could not load your canvas. We will try again.');
@@ -256,7 +260,6 @@ $('deleteCanvas').onclick = async () => {
   } catch { message('Could not delete the canvas. Try again.'); }
 };
 $('playButton').onclick = () => { void toggleReading(); };
-$('focusSentence').onclick = () => { void toggleReading(); };
 $('repeatButton').onclick = () => { void readingAction(() => player.replay()); };
 $('previousButton').onclick = () => { void readingAction(() => player.previous()); };
 $('nextButton').onclick = () => { void readingAction(() => player.next()); };
@@ -267,15 +270,6 @@ $('autoButton').onclick = () => {
 };
 $('voice').onchange = () => { void readingAction(() => player.setVoice($('voice').value)); saveSettings(); };
 $('pace').onchange = () => { void readingAction(() => player.setPace($('pace').value)); saveSettings(); };
-$('focusButton').onclick = () => {
-  focus = !focus; document.body.classList.toggle('is-focus-mode', focus);
-  $('focusModeLabel').textContent = focus ? 'Full text' : 'Focus';
-  $('focusButton').setAttribute('aria-label', focus ? 'Full text' : 'Focus');
-  $('focusButton').title = focus ? 'Full text' : 'Focus';
-  $('focusButton').setAttribute('aria-pressed', String(focus));
-  $('focusReader').hidden = !focus || !model.sentences.length; $('fullReader').hidden = focus || !model.sentences.length;
-  if (!focus) renderFullText();
-};
 $('chaptersButton').onclick = () => showChapters(!$('chapterSidebar').open);
 $('closeChapters').onclick = () => showChapters(false);
 $('chapterSidebar').addEventListener('close', () => {

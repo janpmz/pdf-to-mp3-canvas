@@ -9,8 +9,8 @@
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data:; connect-src 'self' http://localhost:8702 http://127.0.0.1:8702; base-uri 'none'; form-action 'none'; object-src 'none'" />
   <title>Canvas — PDF TO MP3</title>
   <link rel="icon" href="../favicon.ico" />
-  <link rel="stylesheet" href="./canvas.css?v=free-kokoro-times-2" />
-  <script type="module" src="./canvas.js?v=20261019-example-chat"></script>
+  <link rel="stylesheet" href="./canvas.css?v=free-reading-view-1" />
+  <script type="module" src="./canvas.js?v=free-reading-view-1"></script>
 </head>
 <body class="canvas-page content-page">
   <main class="player-stage">
@@ -61,7 +61,7 @@
     <section id="reader" class="reading-heading" hidden>
       <p id="canvasName"></p><h1 id="chapterName"></h1>
     </section>
-    <div id="emptyCanvas" class="focus-reader" hidden>
+    <div id="emptyCanvas" class="canvas-empty-reader" hidden>
       <div class="empty-canvas subscription-main">
         <h2>Your canvas is ready.</h2>
         <p id="emptyMessage">Waiting for your AI to send text.</p>
@@ -69,21 +69,8 @@
         <p class="quiet" id="emptyTip">Text will appear here as it arrives. You can keep this page open.</p>
       </div>
     </div>
-    <div id="focusReader" class="focus-reader" aria-label="Current sentence" tabindex="-1" hidden>
-      <button id="focusSentence" class="focus-sentence" type="button" aria-live="polite" aria-atomic="true"></button>
-    </div>
     <section id="fullReader" class="full-reader" aria-label="Full text" hidden></section>
       <footer id="playerFooter" class="player-footer" hidden>
-        <button class="focus-mode-button" id="focusButton" type="button" aria-label="Full text" aria-pressed="true" aria-controls="focusReader" title="Full text">
-          <svg class="focus-enter-icon" viewBox="0 0 24 24" aria-hidden="true">
-            <path d="M8 4H4v4m12-4h4v4M4 16v4h4m12-4v4h-4" />
-          </svg>
-          <svg class="focus-exit-icon" viewBox="0 0 24 24" aria-hidden="true">
-            <path d="M4 8h4V4m12 4h-4V4M8 20v-4H4m12 4v-4h4" />
-          </svg>
-          <span id="focusModeLabel">Full text</span>
-        </button>
-
         <div class="action-row">
           <div class="player-controls" aria-label="Player controls">
             <button class="control" id="repeatButton" type="button" aria-label="Repeat sentence">

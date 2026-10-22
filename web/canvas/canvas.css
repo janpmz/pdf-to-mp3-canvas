@@ -15,16 +15,9 @@ button, input, select, textarea { font: inherit; }
 .canvas-menu { display: block; margin: 0; }
 .canvas-menu .toolbar-more-menu-panel { min-width: 200px; }
 .canvas-menu button { width: 100%; border: 0; background: transparent; text-align: left; cursor: pointer; }
-.canvas-page.is-focus-mode .app-toolbar-center > #readingSettings:not([hidden]) { display: flex !important; }
-.canvas-page.is-focus-mode .app-toolbar-right > #canvasMenu { display: block !important; }
 .listening-tools { display: flex; align-items: center; gap: 48px; }
 .listening-setting { display: flex; align-items: center; gap: 6px; color: #616979; font-size: 12px; font-weight: 500; }
 .listening-setting select { min-width: 0; height: 44px; padding: 0; border: 0; color: inherit; background: transparent; cursor: pointer; }
-.canvas-page.is-focus-mode .app-toolbar-brand { color: #f5f5f5; }
-.is-focus-mode .listening-setting { color: #a3a3a3; }
-.is-focus-mode .canvas-menu :is(.toolbar-more-menu-button, .toolbar-more-menu-link) { color: #d4d4d4; }
-.is-focus-mode .canvas-menu .toolbar-more-menu-panel { border-color: #333; background: #111; box-shadow: 0 16px 38px rgb(0 0 0 / 30%); }
-.is-focus-mode .canvas-menu .toolbar-more-menu-link:hover { color: #f5f5f5; background: #242424; }
 
 .welcome { width: min(100%, 640px); margin: 0 auto; padding: 140px 28px 60px; }
 .welcome h1 { margin: 0; font: 400 40px/1.45 "Libre Baskerville", Baskerville, serif; }
@@ -38,49 +31,112 @@ button, input, select, textarea { font: inherit; }
 .empty-canvas { max-width: 420px; margin: auto; text-align: center; }
 .empty-canvas h2 { font: 400 26px/1.5 "Libre Baskerville", Baskerville, serif; }
 .empty-canvas p { color: #7e8698; font-size: 14px; line-height: 1.6; }
-.is-focus-mode .empty-canvas :is(h2, p) { color: #d4d4d4; }
 
-.reading-heading { padding: calc(var(--player-toolbar-height) + 42px) 28px 0; text-align: center; }
-.reading-heading p { margin: 0 0 12px; color: #7e8698; font-size: 13px; }
-.reading-heading h1 { margin: 0; font: 400 26px/1.5 "Libre Baskerville", Baskerville, serif; }
-.full-reader { position: absolute; inset: calc(var(--player-toolbar-height) + 140px) 0 var(--ui-footer-height); width: min(100%, 760px); margin: 0 auto; padding: 24px 28px; overflow-y: auto; }
-.full-reader .sentence { display: block; width: 100%; margin: 0 0 16px; padding: 12px; border: 0; border-radius: 8px; color: var(--body); background: transparent; font: 400 20px/1.6 "Libre Baskerville", Baskerville, serif; text-align: left; }
-.full-reader .sentence.is-selected { color: var(--accent-900); background: var(--accent-50); }
+/* Match the website's light reading page. */
+html:has(> body.canvas-page.content-page) {
+  --ui-toolbar-scale: 1;
+  --ui-footer-scale: 1;
+  --ui-footer-height: calc(112px + env(safe-area-inset-bottom, 0px));
+  scrollbar-gutter: auto;
+}
+.canvas-page.content-page .player-stage {
+  display: flex;
+  height: 100dvh;
+  min-height: 0;
+  padding: 0;
+  flex-direction: column;
+  overflow: hidden;
+}
+body.canvas-page.content-page .app-toolbar.app-toolbar-page {
+  position: relative;
+  inset: auto;
+  min-height: var(--player-toolbar-height);
+  height: var(--player-toolbar-height);
+  flex: 0 0 auto;
+  grid-template-columns: minmax(0, 1fr) auto minmax(44px, 1fr);
+  grid-template-rows: 1fr;
+  padding-inline: 24px;
+  border-bottom: 1px solid #e5eef5;
+}
+body.canvas-page.content-page .app-toolbar.app-toolbar-page > .app-toolbar-center {
+  position: static;
+  width: auto;
+  max-width: none;
+  justify-self: center;
+  transform: none;
+}
+body.canvas-page.content-page .app-toolbar.app-toolbar-page > .app-toolbar-right {
+  position: static;
+  justify-self: end;
+  transform: none;
+}
+.canvas-page.content-page .welcome { padding-top: 40px; overflow-y: auto; }
+.reading-heading {
+  width: min(100%, 784px);
+  flex: 0 0 auto;
+  margin: 0 auto;
+  padding: 32px 32px 20px;
+  text-align: left;
+}
+.reading-heading p { margin: 0 0 12px; color: #697386; font-size: 12px; line-height: 1.5; }
+.reading-heading h1 { margin: 0; color: #050b1a; font: 400 26px/1.4 "Libre Baskerville", Baskerville, serif; letter-spacing: -.035em; }
+.full-reader {
+  position: relative;
+  inset: auto;
+  width: min(100%, 784px);
+  min-height: 0;
+  flex: 1;
+  margin: 0 auto;
+  padding: 0 32px 32px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scroll-padding-block: 16px;
+}
+.full-reader .sentence {
+  display: block;
+  width: 100%;
+  margin: 0 0 12px;
+  padding: 8px 12px;
+  border: 0;
+  border-radius: 8px;
+  color: #4f596a;
+  background: transparent;
+  font: 400 18px/1.65 "Libre Baskerville", Baskerville, serif;
+  letter-spacing: -.015em;
+  text-align: left;
+  overflow-wrap: anywhere;
+  cursor: pointer;
+}
+.full-reader .sentence.is-selected { color: #1f2937; background: #f2eefb; }
+.full-reader .sentence:hover { background: #f4f7fb; }
+.full-reader .sentence:focus-visible { outline: 2px solid #7b3aed; outline-offset: 2px; }
+.full-reader .spoken-part.is-current { color: #1f2937; background: #bbf7d0; border-radius: 3px; }
+.canvas-empty-reader { display: flex; min-height: 0; flex: 1; padding: 24px; overflow-y: auto; }
+.canvas-page #playerFooter {
+  position: relative;
+  inset: auto;
+  min-height: var(--ui-footer-height);
+  height: var(--ui-footer-height);
+  flex: 0 0 auto;
+  align-items: center;
+  padding: 0 24px env(safe-area-inset-bottom, 0px);
+  border-top: 1px solid #e5eef5;
+  background: #f8fbfe;
+  box-shadow: none;
+  backdrop-filter: none;
+}
+.canvas-page #playerFooter .action-row { display: flex; justify-content: center; width: auto; min-height: 0; height: auto; flex: 0 0 auto; margin: 0; transform: none; }
+.canvas-page #playerFooter .player-controls { width: auto; flex: 0 0 auto; gap: 14px; }
+.canvas-page #playerFooter .control { width: 46px; height: 46px; flex-shrink: 0; }
+.canvas-page #playerFooter #repeatButton { display: grid; }
+.canvas-page #playerFooter .control-play { width: 61px; height: 61px; }
+.canvas-page #playerFooter .footer-tools { top: 50%; right: 24px; gap: 0; transform: translateY(-50%); }
 .control-play .loading-icon { display: none; }
 .control-play.is-loading .loading-icon { display: inline-block; color: currentColor; }
 .control-play.is-loading :is(.play-icon, .pause-icon) { display: none; }
-/* YouTube's dark buttons use a light wash. The top edge gives it depth on black.
-   Reference: https://www.youtube.com/watch?v=1V_o8tfuGdw */
-.canvas-page.is-focus-mode #playerFooter {
-  --footer-grey-face: linear-gradient(180deg, #3b3b3b, #2c2c2c);
-  --footer-grey-border: transparent;
-  --footer-grey-colour: #f1f1f1;
-  --footer-grey-shadow: inset 0 1px 0 rgb(255 255 255 / 12%), inset 0 -1px 0 rgb(0 0 0 / 28%), 0 2px 3px rgb(0 0 0 / 28%);
-}
-.canvas-page.is-focus-mode #playerFooter :is(.control, .speak-pill:not(.is-feature-active)) {
-  /* Keep the edge clean when Chrome scales these buttons. */
-  border: 0;
-  backdrop-filter: none;
-  transition: background 140ms ease, box-shadow 140ms ease, transform 100ms ease;
-}
-.canvas-page.is-focus-mode #playerFooter :is(.control:not(.control-purple), .speak-pill:not(.is-feature-active)):hover:not(:disabled) {
-  background: linear-gradient(180deg, #484848, #383838);
-}
-.canvas-page.is-focus-mode #playerFooter .control-purple {
-  border-color: transparent;
-  background: linear-gradient(180deg, #8450dc, #6530bc);
-  box-shadow: inset 0 1px 0 rgb(255 255 255 / 23%), inset 0 -1px 0 rgb(0 0 0 / 22%), 0 2px 3px rgb(0 0 0 / 28%);
-}
-.canvas-page.is-focus-mode #playerFooter .control-purple:hover:not(:disabled) {
-  background: linear-gradient(180deg, #925fe7, #723bca);
-}
-.canvas-page.is-focus-mode #playerFooter :is(.control, .speak-pill:not(.is-feature-active)):active:not(:disabled) {
-  box-shadow: inset 0 2px 4px rgb(0 0 0 / 28%);
-  transform: translateY(1px);
-}
 .canvas-page .footer-tools { display: flex; }
 .canvas-notice { position: fixed; right: 24px; bottom: calc(var(--ui-footer-height) + 14px); left: 24px; margin: 0; color: #7e8698; font-size: 13px; line-height: 1.5; text-align: center; pointer-events: none; }
-.is-focus-mode .canvas-notice { color: #aaa; }
 
 .canvas-chapters { height: 100dvh; max-height: 100dvh; max-width: none; margin: 0 0 0 auto; padding: 0; border-top: 0; border-right: 0; border-bottom: 0; }
 .canvas-chapters:not([open]), .canvas-dialog:not([open]) { display: none; }
@@ -95,7 +151,6 @@ button, input, select, textarea { font: inherit; }
 .dialog-heading h2 { margin: 0; }
 .canvas-dialog .dialog-heading button { min-height: 36px; padding: 8px 12px; }
 .canvas-dialog p { margin: 16px 0; }
-.canvas-page #playerFooter .action-row { display: flex; justify-content: center; }
 .dialog-actions { display: flex; justify-content: flex-end; gap: 12px; margin-top: 20px; }
 .dialog-actions .subscription-button-primary { width: auto; }
 .prompt-dialog { width: min(700px, calc(100% - 32px)); }
@@ -119,3 +174,33 @@ body.canvas-guide-page { height: auto; overflow: visible; }
   .canvas-page .app-toolbar .app-toolbar-brand { font-size: 12px; }
 }
 @media (prefers-reduced-motion: reduce) { .canvas-chapters { transition: none; } }
+
+@media (max-width: 600px) {
+  html:has(> body.canvas-page.content-page) { --ui-footer-height: calc(96px + env(safe-area-inset-bottom, 0px)); }
+  body.canvas-page.content-page .app-toolbar.app-toolbar-page { padding-inline: 16px; gap: 8px; grid-template-columns: max-content minmax(0, 1fr) 36px; }
+  body.canvas-page.content-page .app-toolbar.app-toolbar-page .app-toolbar-brand { font-size: 12px; }
+  .canvas-page .listening-tools { gap: 12px; }
+  .reading-heading { padding: 28px 20px 16px; }
+  .reading-heading h1 { font-size: 23px; }
+  .full-reader { padding: 0 16px 24px; }
+  .canvas-page #playerFooter { justify-content: flex-start; padding-inline: 20px; }
+  .canvas-page #playerFooter .player-controls { gap: 10px; }
+  .canvas-page #playerFooter .control { width: 40px; height: 40px; }
+  .canvas-page #playerFooter .control-play { width: 54px; height: 54px; }
+  .canvas-page #playerFooter .footer-tools { right: 20px; }
+}
+@media (max-width: 360px) {
+  body.canvas-page.content-page .app-toolbar.app-toolbar-page {
+    height: auto;
+    padding-block: 8px;
+    grid-template-columns: minmax(0, 1fr) 36px;
+    grid-template-rows: 36px 36px;
+  }
+  body.canvas-page.content-page .app-toolbar.app-toolbar-page > .app-toolbar-center { grid-column: 1 / -1; grid-row: 2; justify-self: start; }
+  body.canvas-page.content-page .app-toolbar.app-toolbar-page > .app-toolbar-right { grid-column: 2; grid-row: 1; }
+  .canvas-page .listening-setting { font-size: 11px; }
+  .canvas-page .listening-tools { gap: 6px; }
+  .canvas-page #playerFooter { padding-inline: 16px; }
+  .canvas-page #playerFooter .player-controls { gap: 8px; }
+  .canvas-page #playerFooter .footer-tools { right: 16px; }
+}
