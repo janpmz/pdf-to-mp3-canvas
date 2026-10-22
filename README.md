@@ -1,6 +1,6 @@
 # Free Canvas test
 
-This local `free-canvas` branch uses the existing Kokoro service. Users send text, open Canvas, and press Play. They need no key or account. Canvas shows all the text in the website’s light reading style. It has no focus switch. Ask and Explain are absent. Speed stays at Normal for this test.
+This local `free-canvas` branch uses the existing Kokoro service. Users send text, open Canvas, and press Play. They need no key or account. Canvas uses the website’s player layout and its unchanged player-page.css: chapter sidebar, one page at a time, page arrows, and word highlights. Click a sentence to play it. Chapter and page jumps keep speech paused when it was paused. It has no focus switch. Ask and Explain are absent. Speed stays at Normal for this test.
 
 ## Run locally
 

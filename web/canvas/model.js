@@ -1,20 +1,28 @@
 export function canvasSentences(canvas) {
-  const sentences = [], chapters = [];
+  const sentences = [], chapters = [], pages = [];
   function walk(items, depth = 0) {
     for (const chapter of items || []) {
       const entry = { id: chapter._id, title: chapter.title, depth, startIndex: sentences.length };
       chapters.push(entry);
-      for (const page of chapter.pages || []) {
+      for (const [index, page] of (chapter.pages || []).entries()) {
+        const item = { id: page._id, title: page.title, chapterId: chapter._id, chapterTitle: chapter.title,
+          number: index + 1, total: chapter.pages.length, startIndex: sentences.length };
         for (const sentence of page.sentences || []) {
           sentences.push({ ...sentence, chapterId: chapter._id, chapterTitle: chapter.title, pageId: page._id });
         }
+        item.endIndex = sentences.length;
+        if (item.endIndex > item.startIndex) pages.push(item);
       }
       walk(chapter.subchapters, depth + 1);
       entry.endIndex = sentences.length;
     }
   }
   walk(canvas.chapters);
-  return { sentences, chapters };
+  return { sentences, chapters, pages };
+}
+
+export function canvasPage(model, sentenceIndex) {
+  return model.pages.find(page => sentenceIndex >= page.startIndex && sentenceIndex < page.endIndex);
 }
 
 export function canvasPrompt({ canvas, apiBase, uploadCode, expiresAt }) {

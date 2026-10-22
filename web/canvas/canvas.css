@@ -1,24 +1,40 @@
 @import "../player-shared.css";
 @import "../loading.css";
 @import "../player.css";
-@import "./player-controls.css";
 @import "../toolbar.css";
 @import "../reading-font.css";
+@import "../player-page.css";
+@import "./player-controls.css";
 @import "../connect-ai/setup.css";
 
-/* Canvas uses the site's reader, toolbar, forms, and chapter panel. */
 [hidden] { display: none !important; }
 body { font-family: "Site Inter", system-ui, sans-serif; }
 button, input, select, textarea { font: inherit; }
 .canvas-page .player-stage { --player-toolbar-height: calc(72px + env(safe-area-inset-top, 0px)); width: 100%; min-height: 100dvh; }
-.canvas-page .app-toolbar { position: absolute; inset: 0 0 auto; height: var(--player-toolbar-height); }
+.canvas-page:not(.is-card-player):not(.canvas-guide-page) .player-stage { height: 100dvh; overflow-y: auto; }
+.canvas-page:not(.is-card-player) .app-toolbar { position: absolute; inset: 0 0 auto; height: var(--player-toolbar-height); }
 .canvas-menu { display: block; margin: 0; }
-.canvas-menu .toolbar-more-menu-panel { min-width: 200px; }
-.canvas-menu button { width: 100%; border: 0; background: transparent; text-align: left; cursor: pointer; }
-.listening-tools { display: flex; align-items: center; gap: 48px; }
-.listening-setting { display: flex; align-items: center; gap: 6px; color: #616979; font-size: 12px; font-weight: 500; }
-.listening-setting select { min-width: 0; height: 44px; padding: 0; border: 0; color: inherit; background: transparent; cursor: pointer; }
-
+.canvas-menu summary { list-style: none; }
+.canvas-menu summary::-webkit-details-marker { display: none; }
+.canvas-menu .toolbar-more-menu-panel { min-width: 220px; }
+.canvas-menu .toolbar-more-menu-link { width: 100%; border: 0; background: transparent; text-align: left; cursor: pointer; }
+.canvas-voice-setting select { min-width: 0; max-width: 110px; height: 36px; padding: 0; border: 0; color: inherit; background: transparent; font: inherit; cursor: pointer; }
+.canvas-menu-settings:empty { display: none; }
+.canvas-menu-settings .canvas-voice-setting { display: flex; justify-content: space-between; padding: 8px 12px; color: #4f596a; font: 500 13px/20px "Site Inter", system-ui, sans-serif; }
+.canvas-page .chapter-sidebar-option { width: calc(100% - var(--depth, 0) * 12px); margin-left: calc(var(--depth, 0) * 12px); text-align: left; cursor: pointer; }
+.canvas-page .chapter-sidebar-option:disabled { opacity: .5; cursor: default; }
+.canvas-page .chapter-option-title { white-space: normal; overflow-wrap: anywhere; }
+.canvas-empty-reader { display: flex; width: 100%; min-height: 0; padding: 32px; overflow-y: auto; }
+.canvas-notice { position: fixed; z-index: 45; right: 24px; bottom: calc(var(--ui-footer-height) + 14px); left: 24px; margin: 0; color: #697386; font-size: 13px; line-height: 1.5; text-align: center; pointer-events: none; }
+.control-play .loading-icon { display: none; }
+.control-play.is-loading .loading-icon { display: inline-block; color: currentColor; }
+.control-play.is-loading :is(.play-icon, .pause-icon) { display: none; }
+@media (min-width: 721px) { .canvas-page .canvas-chapters-button { display: none; } }
+@media (max-width: 720px) {
+  .canvas-page .player-card-position .chapter-position-label { display: none; }
+  .canvas-page .player-card-header { gap: 4px; }
+  .canvas-page .canvas-chapters-button { padding-inline: 8px; }
+}
 .welcome { width: min(100%, 640px); margin: 0 auto; padding: 140px 28px 60px; }
 .welcome h1 { margin: 0; font: 400 40px/1.45 "Libre Baskerville", Baskerville, serif; }
 .welcome-copy { margin: 0 0 24px; color: #535f74; font-size: 18px; line-height: 1.6; }
@@ -32,120 +48,9 @@ button, input, select, textarea { font: inherit; }
 .empty-canvas h2 { font: 400 26px/1.5 "Libre Baskerville", Baskerville, serif; }
 .empty-canvas p { color: #7e8698; font-size: 14px; line-height: 1.6; }
 
-/* Match the website's light reading page. */
-html:has(> body.canvas-page.content-page) {
-  --ui-toolbar-scale: 1;
-  --ui-footer-scale: 1;
-  --ui-footer-height: calc(112px + env(safe-area-inset-bottom, 0px));
-  scrollbar-gutter: auto;
-}
-.canvas-page.content-page .player-stage {
-  display: flex;
-  height: 100dvh;
-  min-height: 0;
-  padding: 0;
-  flex-direction: column;
-  overflow: hidden;
-}
-body.canvas-page.content-page .app-toolbar.app-toolbar-page {
-  position: relative;
-  inset: auto;
-  min-height: var(--player-toolbar-height);
-  height: var(--player-toolbar-height);
-  flex: 0 0 auto;
-  grid-template-columns: minmax(0, 1fr) auto minmax(44px, 1fr);
-  grid-template-rows: 1fr;
-  padding-inline: 24px;
-  border-bottom: 1px solid #e5eef5;
-}
-body.canvas-page.content-page .app-toolbar.app-toolbar-page > .app-toolbar-center {
-  position: static;
-  width: auto;
-  max-width: none;
-  justify-self: center;
-  transform: none;
-}
-body.canvas-page.content-page .app-toolbar.app-toolbar-page > .app-toolbar-right {
-  position: static;
-  justify-self: end;
-  transform: none;
-}
-.canvas-page.content-page .welcome { padding-top: 40px; overflow-y: auto; }
-.reading-heading {
-  width: min(100%, 784px);
-  flex: 0 0 auto;
-  margin: 0 auto;
-  padding: 32px 44px 20px;
-}
-.reading-heading h1 { margin: 0; color: #050b1a; font: 400 26px/1.4 "Libre Baskerville", Baskerville, serif; letter-spacing: -.035em; }
-.full-reader {
-  position: relative;
-  inset: auto;
-  width: min(100%, 784px);
-  min-height: 0;
-  flex: 1;
-  margin: 0 auto;
-  padding: 0 32px 32px;
-  overflow-y: auto;
-  overscroll-behavior: contain;
-  scrollbar-width: none;
-  scroll-padding-block: 16px;
-}
-.full-reader::-webkit-scrollbar { display: none; }
-.full-reader .sentence {
-  display: block;
-  width: 100%;
-  margin: 0 0 12px;
-  padding: 8px 12px;
-  border: 0;
-  border-radius: 8px;
-  color: #4f596a;
-  background: transparent;
-  font: 400 18px/1.65 "Libre Baskerville", Baskerville, serif;
-  letter-spacing: -.015em;
-  text-align: left;
-  overflow-wrap: anywhere;
-  cursor: pointer;
-}
-.full-reader .sentence.is-selected { color: #1f2937; background: #f2eefb; }
-.full-reader .sentence:hover { background: #f4f7fb; }
-.full-reader .sentence:focus-visible { outline: 2px solid #7b3aed; outline-offset: 2px; }
-.full-reader .spoken-part.is-current { color: #1f2937; background: #bbf7d0; border-radius: 3px; }
-.canvas-empty-reader { display: flex; min-height: 0; flex: 1; padding: 24px; overflow-y: auto; }
-.canvas-page #playerFooter {
-  position: relative;
-  inset: auto;
-  min-height: var(--ui-footer-height);
-  height: var(--ui-footer-height);
-  flex: 0 0 auto;
-  align-items: center;
-  padding: 0 24px env(safe-area-inset-bottom, 0px);
-  border-top: 1px solid #e5eef5;
-  background: #f8fbfe;
-  box-shadow: none;
-  backdrop-filter: none;
-}
-.canvas-page #playerFooter .action-row { display: flex; justify-content: center; width: auto; min-height: 0; height: auto; flex: 0 0 auto; margin: 0; transform: none; }
-.canvas-page #playerFooter .player-controls { width: auto; flex: 0 0 auto; gap: 14px; }
-.canvas-page #playerFooter .control { width: 46px; height: 46px; flex-shrink: 0; }
-.canvas-page #playerFooter #repeatButton { display: grid; }
-.canvas-page #playerFooter .control-play { width: 61px; height: 61px; }
-.canvas-page #playerFooter .footer-tools { top: 50%; right: 24px; gap: 0; transform: translateY(-50%); }
-.control-play .loading-icon { display: none; }
-.control-play.is-loading .loading-icon { display: inline-block; color: currentColor; }
-.control-play.is-loading :is(.play-icon, .pause-icon) { display: none; }
-.canvas-page .footer-tools { display: flex; }
-.canvas-notice { position: fixed; right: 24px; bottom: calc(var(--ui-footer-height) + 14px); left: 24px; margin: 0; color: #7e8698; font-size: 13px; line-height: 1.5; text-align: center; pointer-events: none; }
-
-.canvas-chapters { height: 100dvh; max-height: 100dvh; max-width: none; margin: 0 0 0 auto; padding: 0; border-top: 0; border-right: 0; border-bottom: 0; }
-.canvas-chapters:not([open]), .canvas-dialog:not([open]) { display: none; }
-.canvas-chapters .chapter-sidebar-header { padding-right: 44px; }
-.canvas-chapters .chapter-sidebar-list { overflow: visible; }
-.canvas-chapters .chapter-option { width: calc(100% - var(--depth, 0) * 20px); margin-left: calc(var(--depth, 0) * 20px); flex-shrink: 0; }
-.canvas-chapters .chapter-option-title { white-space: normal; overflow-wrap: anywhere; }
-.canvas-chapters .chapter-option:disabled { opacity: .5; cursor: default; }
+.canvas-dialog:not([open]) { display: none; }
 .canvas-dialog { width: min(490px, calc(100% - 32px)); padding: 24px; color: var(--body); font-size: 14px; line-height: 1.6; }
-.canvas-dialog::backdrop, .canvas-chapters::backdrop { background: rgb(5 11 26 / 18%); backdrop-filter: blur(2px); }
+.canvas-dialog::backdrop { background: rgb(5 11 26 / 18%); backdrop-filter: blur(2px); }
 .dialog-heading { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
 .dialog-heading h2 { margin: 0; }
 .canvas-dialog .dialog-heading button { min-height: 36px; padding: 8px 12px; }
@@ -166,40 +71,3 @@ body.canvas-guide-page { height: auto; overflow: visible; }
 .guide-eyebrow + h1 { margin-top: 0; }
 .guide h2 { margin-top: 36px; font-size: 20px; }
 .guide pre { padding: 20px; border: 1px solid #d5dfe7; border-radius: 12px; background: #f8fafc; font-size: 12px; overflow-x: auto; }
-@media (max-width: 600px) {
-  .listening-tools { gap: 16px; }
-  .listening-setting { gap: 3px; font-size: 11px; }
-  .listening-setting select { max-width: 90px; }
-  .canvas-page .app-toolbar .app-toolbar-brand { font-size: 12px; }
-}
-@media (prefers-reduced-motion: reduce) { .canvas-chapters { transition: none; } }
-
-@media (max-width: 600px) {
-  html:has(> body.canvas-page.content-page) { --ui-footer-height: calc(96px + env(safe-area-inset-bottom, 0px)); }
-  body.canvas-page.content-page .app-toolbar.app-toolbar-page { padding-inline: 16px; gap: 8px; grid-template-columns: max-content minmax(0, 1fr) 36px; }
-  body.canvas-page.content-page .app-toolbar.app-toolbar-page .app-toolbar-brand { font-size: 12px; }
-  .canvas-page .listening-tools { gap: 12px; }
-  .reading-heading { padding: 28px 28px 16px; }
-  .reading-heading h1 { font-size: 23px; }
-  .full-reader { padding: 0 16px 24px; }
-  .canvas-page #playerFooter { justify-content: flex-start; padding-inline: 20px; }
-  .canvas-page #playerFooter .player-controls { gap: 10px; }
-  .canvas-page #playerFooter .control { width: 40px; height: 40px; }
-  .canvas-page #playerFooter .control-play { width: 54px; height: 54px; }
-  .canvas-page #playerFooter .footer-tools { right: 20px; }
-}
-@media (max-width: 360px) {
-  body.canvas-page.content-page .app-toolbar.app-toolbar-page {
-    height: auto;
-    padding-block: 8px;
-    grid-template-columns: minmax(0, 1fr) 36px;
-    grid-template-rows: 36px 36px;
-  }
-  body.canvas-page.content-page .app-toolbar.app-toolbar-page > .app-toolbar-center { grid-column: 1 / -1; grid-row: 2; justify-self: start; }
-  body.canvas-page.content-page .app-toolbar.app-toolbar-page > .app-toolbar-right { grid-column: 2; grid-row: 1; }
-  .canvas-page .listening-setting { font-size: 11px; }
-  .canvas-page .listening-tools { gap: 6px; }
-  .canvas-page #playerFooter { padding-inline: 16px; }
-  .canvas-page #playerFooter .player-controls { gap: 8px; }
-  .canvas-page #playerFooter .footer-tools { right: 16px; }
-}

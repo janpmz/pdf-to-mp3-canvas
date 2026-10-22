@@ -1,6 +1,6 @@
 import { createSentencePlayer } from './sentence-player.js';
 import { createFreeSpeech, FREE_VOICES, freeAudioCacheKey } from './free-speech.js';
-import { canvasPrompt, canvasSentences } from './model.js';
+import { canvasPrompt, canvasSentences, canvasPage } from './model.js';
 
 const $ = id => document.getElementById(id);
 const configuredApi = document.querySelector('meta[name="canvas-api"]')?.content;
@@ -10,8 +10,8 @@ const params = new URLSearchParams(location.search);
 let canvasId = params.get('id') || '';
 const request = apiRequest;
 const pollInterval = 3000;
-let canvas = null, model = { chapters: [], sentences: [] }, currentState = null;
-let selectedId = '', fullRows = [], highlighted = [];
+let canvas = null, model = { chapters: [], sentences: [], pages: [] }, currentState = null;
+let selectedId = '', renderedPageId = '', fullRows = [], highlighted = [];
 let pollTimer, etag, refreshing = false, firstLoad = true;
 let lastSavedSentence = '', noticeTimer;
 const storage = {
@@ -92,12 +92,11 @@ function render(state) {
   $('autoButton').classList.toggle('tool-item-active', state.autoplay);
   $('autoButton').setAttribute('aria-label', state.autoplay ? 'Turn auto play off' : 'Turn auto play on');
   $('autoButton').setAttribute('aria-pressed', String(state.autoplay));
-  $('chapterName').textContent = sentence?.chapterTitle || '';
-  $('readingHeading').hidden = !sentence?.chapterTitle;
+  renderFullText();
   if (sentence?._id !== selectedId) {
     selectedId = sentence?._id || '';
     fullRows.forEach((row, index) => {
-      row.button.classList.toggle('is-selected', index === state.sentenceIndex);
+      row.button.classList.toggle('is-current', index === state.sentenceIndex);
       row.button.setAttribute('aria-current', String(index === state.sentenceIndex));
     });
     fullRows[state.sentenceIndex]?.button.scrollIntoView({ block: 'nearest' });
@@ -112,34 +111,72 @@ function render(state) {
   }
   renderWords(state);
 }
-function renderFullText() {
+function renderFullText(force = false) {
+  const page = currentState?.sentences[currentState.sentenceIndex]
+    ? canvasPage(model, currentState.sentenceIndex) : undefined;
+  if (!force && renderedPageId === (page?.id || '')) return;
+  renderedPageId = page?.id || '';
   fullRows = [];
+  $('fullReader').hidden = !page;
+  $('previousPageButton').hidden = !page;
+  $('nextPageButton').hidden = !page;
+  const pageIndex = model.pages.indexOf(page);
+  $('previousPageButton').disabled = pageIndex <= 0;
+  $('nextPageButton').disabled = pageIndex < 0 || pageIndex >= model.pages.length - 1;
+  const chapterIndex = model.chapters.findIndex(chapter => chapter.id === page?.chapterId);
+  $('chapterPosition').textContent = page ? `Chapter ${chapterIndex + 1} of ${model.chapters.length}` : '';
+  $('chapterTitleText').textContent = page?.chapterTitle || '';
+  $('pagePosition').textContent = page ? `Page ${page.number} of ${page.total}` : '';
   const fragment = document.createDocumentFragment();
-  for (const [index, sentence] of (currentState?.sentences || []).entries()) {
+  if (page) for (let index = page.startIndex; index < page.endIndex; index++) {
+    const sentence = currentState.sentences[index];
     const button = document.createElement('button'); button.type = 'button'; button.className = 'sentence';
-    button.classList.toggle('is-selected', currentState.sentenceIndex === index);
+    const marker = document.createElement('span'); marker.className = 'sentence-marker';
+    button.classList.toggle('is-current', currentState.sentenceIndex === index);
     button.setAttribute('aria-current', String(currentState.sentenceIndex === index));
-    const words = appendSentence(button, sentence);
-    button.addEventListener('click', () => { void readingAction(() => player.selectSentence(index)); });
-    fullRows.push({ button, words }); fragment.append(button);
+    const words = appendSentence(marker, sentence);
+    button.append(marker);
+    button.addEventListener('click', () => { void readingAction(() => player.seekSentence(index)); });
+    fullRows[index] = { button, words }; fragment.append(button);
   }
-  $('fullReader').replaceChildren(fragment);
-  fullRows[currentState?.sentenceIndex]?.button.scrollIntoView({ block: 'nearest' });
+  $('sentenceList').replaceChildren(fragment);
+  $('fullReader').scrollTop = 0;
   renderWords(currentState);
 }
+const sidebarWide = window.matchMedia('(min-width: 721px)');
+const controlsWide = window.matchMedia('(min-width: 1041px)');
 function showChapters(show) {
-  const dialog = $('chapterSidebar');
-  if (show && !dialog.open) dialog.showModal();
-  if (!show && dialog.open) dialog.close();
-  dialog.classList.toggle('is-open', show);
-  $('chaptersButton').setAttribute('aria-expanded', String(show));
-  if (show) $('closeChapters').focus();
-  else if (document.activeElement?.closest('#chapterSidebar')) $('chaptersButton').focus();
+  const open = show && !sidebarWide.matches && model.chapters.length > 0;
+  $('chapterSidebar').classList.toggle('is-drawer-open', open);
+  $('chapterSidebarBackdrop').hidden = !open;
+  $('chapterSidebarBackdrop').classList.toggle('is-open', open);
+  $('chaptersButton').setAttribute('aria-expanded', String(open));
+  if (open) {
+    $('chapterSidebar').setAttribute('role', 'dialog');
+    $('chapterSidebar').setAttribute('aria-modal', 'true');
+    $('chapterList').querySelector('.is-selected')?.scrollIntoView({ block: 'nearest' });
+    $('closeChapters').focus();
+  } else {
+    $('chapterSidebar').removeAttribute('role');
+    $('chapterSidebar').removeAttribute('aria-modal');
+    if (document.activeElement?.closest('#chapterSidebar') && !sidebarWide.matches) $('chaptersButton').focus();
+  }
 }
+function placeReaderTools() {
+  showChapters(false);
+  if (sidebarWide.matches) $('playerCardBody').prepend($('chapterSidebar'));
+  else document.body.append($('chapterSidebar'));
+  (controlsWide.matches ? $('readingSettings') : $('footerTools')).append($('autoButton'));
+  const settings = controlsWide.matches ? $('readingSettings') : $('menuReadingSettings');
+  settings.append($('voiceSetting'), $('paceSetting'));
+}
+sidebarWide.addEventListener('change', placeReaderTools);
+controlsWide.addEventListener('change', placeReaderTools);
+placeReaderTools();
 function renderChapters() {
   const fragment = document.createDocumentFragment();
   for (const chapter of model.chapters) {
-    const button = document.createElement('button'); button.type = 'button'; button.className = 'chapter-option';
+    const button = document.createElement('button'); button.type = 'button'; button.className = 'chapter-option chapter-sidebar-option';
     button.classList.toggle('is-direct', chapter.depth === 0);
     const title = document.createElement('span'); title.className = 'chapter-option-title'; title.textContent = chapter.title;
     button.append(title);
@@ -152,9 +189,17 @@ function renderChapters() {
   }
   $('chapterList').replaceChildren(fragment);
   $('chaptersButton').hidden = !model.chapters.length;
+  $('chapterSidebar').hidden = !model.chapters.length;
+  if (!model.chapters.length) showChapters(false);
+}
+function turnPage(direction) {
+  const page = canvasPage(model, player.getState().sentenceIndex);
+  const next = model.pages[model.pages.indexOf(page) + direction];
+  if (next) return readingAction(() => player.selectSentence(next.startIndex));
 }
 function showReader() {
-  $('welcome').hidden = true; $('playerFooter').hidden = false;
+  document.body.classList.add('is-card-player'); document.body.classList.remove('content-page');
+  $('welcome').hidden = true; $('playerLayout').hidden = false; $('playerFooter').hidden = false;
   $('shareButton').hidden = false;
   $('promptButton').hidden = !owner(); $('emptyPrompt').hidden = !owner();
 }
@@ -166,6 +211,7 @@ async function refresh() {
     if (result.unchanged) return;
     canvas = result.data; etag = result.tag; model = canvasSentences(canvas);
     document.title = `${canvas.title} — PDF TO MP3 Canvas`; document.documentElement.lang = canvas.language;
+    $('bookLabel').textContent = canvas.title; $('bookLabel').title = canvas.title;
     if (firstLoad) updateVoices(canvas.language);
     showReader();
     const empty = !model.sentences.length;
@@ -178,10 +224,10 @@ async function refresh() {
       firstLoad = false;
     } else await player.updateSentences(model.sentences, { sessionId: canvasId });
     renderChapters();
-    renderFullText();
+    renderFullText(true);
   } catch (error) {
     if (error.status === 404) {
-      await player.load([], { play: false }); model = { chapters: [], sentences: [] };
+      model = { chapters: [], sentences: [], pages: [] }; await player.load([], { play: false });
       renderChapters(); showReader(); $('emptyCanvas').hidden = false;
       $('emptyCanvas').querySelector('h2').textContent = 'Canvas not found';
       $('emptyMessage').textContent = 'Check the link. The canvas may have been deleted.';
@@ -270,12 +316,11 @@ $('autoButton').onclick = () => {
 };
 $('voice').onchange = () => { void readingAction(() => player.setVoice($('voice').value)); saveSettings(); };
 $('pace').onchange = () => { void readingAction(() => player.setPace($('pace').value)); saveSettings(); };
-$('chaptersButton').onclick = () => showChapters(!$('chapterSidebar').open);
+$('chaptersButton').onclick = () => showChapters(!$('chapterSidebar').classList.contains('is-drawer-open'));
 $('closeChapters').onclick = () => showChapters(false);
-$('chapterSidebar').addEventListener('close', () => {
-  $('chapterSidebar').classList.remove('is-open');
-  $('chaptersButton').setAttribute('aria-expanded', 'false');
-});
+$('chapterSidebarBackdrop').onclick = () => showChapters(false);
+$('previousPageButton').onclick = () => { void turnPage(-1); };
+$('nextPageButton').onclick = () => { void turnPage(1); };
 // Keep the site's menu closed after choosing a tool.
 $('canvasMenu').addEventListener('click', event => {
   if (event.target.closest('button, a')) $('canvasMenu').open = false;
@@ -285,6 +330,13 @@ document.addEventListener('click', event => {
 });
 document.addEventListener('keydown', event => {
   if (event.key === 'Escape') { showChapters(false); $('canvasMenu').open = false; }
+  if (event.key === 'Tab' && $('chapterSidebar').classList.contains('is-drawer-open')) {
+    const buttons = [...$('chapterSidebar').querySelectorAll('button:not(:disabled)')];
+    const first = buttons[0], last = buttons.at(-1);
+    if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last?.focus(); }
+    else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first?.focus(); }
+    return;
+  }
   if (event.target.closest('input, textarea, select, button, a') || document.querySelector('dialog[open]') || !currentState?.sentences.length) return;
   if (event.code === 'Space') { event.preventDefault(); void toggleReading(); }
   if (event.key === 'ArrowRight') { event.preventDefault(); void readingAction(() => player.next()); }

@@ -9,34 +9,14 @@
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data:; connect-src 'self' http://localhost:8702 http://127.0.0.1:8702; base-uri 'none'; form-action 'none'; object-src 'none'" />
   <title>Canvas — PDF TO MP3</title>
   <link rel="icon" href="../favicon.ico" />
-  <link rel="stylesheet" href="./canvas.css?v=free-reading-view-3" />
-  <script type="module" src="./canvas.js?v=free-reading-view-3"></script>
+  <link rel="stylesheet" href="./canvas.css?v=free-player-page-1" />
+  <script type="module" src="./canvas.js?v=free-player-page-1"></script>
 </head>
-<body class="canvas-page content-page">
+<body class="canvas-page player-page content-page">
   <main class="player-stage">
     <header class="app-toolbar app-toolbar-overlay app-toolbar-unified app-toolbar-page">
-      <div class="app-toolbar-brand-row app-toolbar-left">
-        <a class="app-toolbar-brand" href="../" aria-label="PDF TO MP3 home">PDF TO MP3</a>
-      </div>
-      <div class="app-toolbar-center">
-        <div class="listening-tools" id="readingSettings" hidden>
-          <label class="listening-setting">Voice <select id="voice" aria-label="Voice"></select></label>
-          <label class="listening-setting">Speed <select id="pace" aria-label="Speed" disabled title="This test uses normal speed"><option value="normal" selected>Normal</option></select></label>
-        </div>
-      </div>
-      <div class="app-toolbar-right">
-        <details id="canvasMenu" class="toolbar-more-menu canvas-menu">
-          <summary class="toolbar-more-menu-button" aria-label="Canvas menu"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="1.8" /><circle cx="12" cy="12" r="1.8" /><circle cx="19" cy="12" r="1.8" /></svg></summary>
-          <nav class="toolbar-more-menu-panel" aria-label="Canvas">
-            <button class="toolbar-more-menu-link" id="chaptersButton" type="button" aria-expanded="false" aria-controls="chapterSidebar" hidden>Chapters</button>
-            <button class="toolbar-more-menu-link" id="promptButton" type="button" hidden>Copy prompt</button>
-            <button class="toolbar-more-menu-link" id="shareButton" type="button" hidden>Share</button>
-            <a class="toolbar-more-menu-link" href="./">New canvas</a>
-            <a class="toolbar-more-menu-link" href="./guide.html">Guide for AI agents</a>
-          </nav>
-        </details>
-      </div>
-      <p id="message" class="canvas-notice" role="status" aria-live="polite" hidden></p>
+      <div class="app-toolbar-brand-row app-toolbar-left"><a class="app-toolbar-brand" href="../" aria-label="PDF TO MP3 home">PDF TO MP3</a></div>
+      <div class="app-toolbar-right"><a class="toolbar-text-link" href="./guide.html">Guide for AI agents</a></div>
     </header>
     <section id="welcome" class="welcome subscription-main">
       <div class="subscription-heading">
@@ -58,18 +38,73 @@
       <a class="guide-link" href="./guide.html">Guide for AI agents</a>
     </section>
 
-    <header id="readingHeading" class="reading-heading" hidden>
-      <h1 id="chapterName"></h1>
-    </header>
-    <div id="emptyCanvas" class="canvas-empty-reader" hidden>
-      <div class="empty-canvas subscription-main">
-        <h2>Your canvas is ready.</h2>
-        <p id="emptyMessage">Waiting for your AI to send text.</p>
-        <button id="emptyPrompt" class="subscription-button" type="button" hidden>Copy prompt for your AI</button>
-        <p class="quiet" id="emptyTip">Text will appear here as it arrives. You can keep this page open.</p>
-      </div>
-    </div>
-    <section id="fullReader" class="full-reader" aria-label="Full text" hidden></section>
+
+    <div id="playerLayout" class="player-layout" hidden>
+      <div id="playerCard" class="player-card">
+        <header class="player-card-header">
+          <a class="player-exit-button" href="./" aria-label="Back" title="Back"><span class="player-back-icon" aria-hidden="true"></span></a>
+          <div class="player-card-position">
+            <span id="bookLabel" class="book-label"></span>
+            <span id="chapterPosition" class="chapter-position-label"></span>
+          </div>
+          <div class="player-card-actions">
+            <div id="readingSettings" class="player-card-tools" hidden>
+          <button class="tool-item tool-item-action tool-item-active player-toolbar-control" id="autoButton" type="button" aria-label="Turn auto play off" aria-pressed="true">
+            <span class="glass-orb">
+              <svg class="auto-icon" viewBox="0 0 28 28" aria-hidden="true">
+                <path d="M4 7v14l8-7-8-7Z" />
+                <path d="M14 7v14l8-7-8-7Z" />
+              </svg>
+            </span>
+            <span class="tool-label" id="autoLabel">Auto play</span>
+          </button>
+              <label id="voiceSetting" class="player-toolbar-control canvas-voice-setting">Voice <select id="voice" aria-label="Voice"></select></label>
+              <label id="paceSetting" class="player-toolbar-control canvas-voice-setting">Speed <select id="pace" aria-label="Speed" disabled title="This test uses normal speed"><option value="normal" selected>Normal</option></select></label>
+            </div>
+            <button id="chaptersButton" class="player-toolbar-control canvas-chapters-button" type="button" aria-expanded="false" aria-controls="chapterSidebar" hidden>Chapters</button>
+            <details id="canvasMenu" class="toolbar-more-menu canvas-menu">
+              <summary class="player-toolbar-control" aria-label="Canvas menu"><span class="player-toolbar-icon player-menu-icon" aria-hidden="true"></span></summary>
+              <nav class="toolbar-more-menu-panel" aria-label="Canvas">
+                <div id="menuReadingSettings" class="canvas-menu-settings"></div>
+                <button class="toolbar-more-menu-link" id="promptButton" type="button" hidden>Copy prompt</button>
+                <button class="toolbar-more-menu-link" id="shareButton" type="button" hidden>Share</button>
+                <a class="toolbar-more-menu-link" href="./">New canvas</a>
+                <a class="toolbar-more-menu-link" href="./guide.html">Guide for AI agents</a>
+              </nav>
+            </details>
+            <a class="player-exit-button" href="./" aria-label="Close player" title="Close player"><span class="player-close-icon" aria-hidden="true"></span></a>
+          </div>
+        </header>
+        <div id="playerCardBody" class="player-card-body">
+          <aside id="chapterSidebar" class="chapter-sidebar load-reveal is-visible" aria-label="Chapters" hidden>
+            <div class="chapter-sidebar-header">
+              <h2>Chapters</h2>
+              <button id="closeChapters" class="chapter-sidebar-close" type="button" aria-label="Close chapters"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18" /></svg></button>
+            </div>
+            <nav id="chapterList" class="chapter-sidebar-list" aria-label="Chapter list"></nav>
+          </aside>
+          <div id="playerReadingPane" class="player-reading-pane">
+            <button id="previousPageButton" class="player-page-turn player-page-previous" type="button" aria-label="Previous page" title="Previous page" aria-controls="pageCopy" hidden disabled><span aria-hidden="true"></span></button>
+            <section id="fullReader" class="player-hero" aria-labelledby="chapterTitle" tabindex="0" hidden>
+              <div class="player-reading-content">
+                <div class="player-title-block"><h1 id="chapterTitle"><span id="chapterTitleText"></span></h1></div>
+                <div class="player-body">
+                  <p class="position-label"><span id="pagePosition" aria-live="polite" aria-atomic="true"></span></p>
+                  <div id="pageCopy" class="page-copy"><div id="sentenceList" class="sentence-list"></div></div>
+                </div>
+              </div>
+            </section>
+            <div id="emptyCanvas" class="canvas-empty-reader" hidden>
+              <div class="empty-canvas subscription-main">
+                <h2>Your canvas is ready.</h2>
+                <p id="emptyMessage">Waiting for your AI to send text.</p>
+                <button id="emptyPrompt" class="subscription-button" type="button" hidden>Copy prompt for your AI</button>
+                <p class="quiet" id="emptyTip">Text will appear here as it arrives. You can keep this page open.</p>
+              </div>
+            </div>
+            <button id="nextPageButton" class="player-page-turn player-page-next" type="button" aria-label="Next page" title="Next page" aria-controls="pageCopy" hidden disabled><span aria-hidden="true"></span></button>
+          </div>
+        </div>
       <footer id="playerFooter" class="player-footer" hidden>
         <div class="action-row">
           <div class="player-controls" aria-label="Player controls">
@@ -106,29 +141,13 @@
           </div>
         </div>
 
-        <div class="footer-tools" role="group" aria-label="Listening tools">
-          <button class="tool-item tool-item-action tool-item-active" id="autoButton" type="button" aria-label="Turn auto play off" aria-pressed="true">
-            <span class="glass-orb">
-              <svg class="auto-icon" viewBox="0 0 28 28" aria-hidden="true">
-                <path d="M4 7v14l8-7-8-7Z" />
-                <path d="M14 7v14l8-7-8-7Z" />
-              </svg>
-            </span>
-            <span class="tool-label" id="autoLabel">Auto play</span>
-          </button>
-
-        </div>
+        <div id="footerTools" class="footer-tools" role="group" aria-label="Listening tools"></div>
       </footer>
-  </main>
-
-  <dialog id="chapterSidebar" class="tips-panel canvas-chapters" role="dialog" aria-label="Chapters">
-    <button id="closeChapters" class="tips-panel-close" type="button" aria-label="Close chapters"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18" /></svg></button>
-    <div class="tips-panel-content">
-      <div class="chapter-sidebar-header"><h2>Chapters</h2></div>
-      <nav id="chapterList" class="chapter-sidebar-list" aria-label="Chapter list"></nav>
+      </div>
     </div>
-  </dialog>
-
+  </main>
+  <div id="chapterSidebarBackdrop" class="chapter-sidebar-backdrop" hidden></div>
+  <p id="message" class="canvas-notice" role="status" aria-live="polite" hidden></p>
   <dialog id="promptDialog" class="canvas-dialog prompt-dialog subscription-main subscription-card" role="dialog" aria-labelledby="promptTitle">
     <div class="dialog-heading"><h2 id="promptTitle">Prompt for your AI</h2><button class="subscription-button" id="closePrompt" type="button">Close</button></div>
     <p>Paste this into an AI that can send web requests. Add your task or attach your source there.</p>

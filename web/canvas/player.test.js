@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { createSentencePlayer, lookaheadSentences } from './sentence-player.js';
 import { FakeAudioContext, FakeAudioWorkletNode } from './test/pcm-audio.js';
-import { canvasSentences, canvasPrompt } from './model.js';
+import { canvasSentences, canvasPrompt, canvasPage } from './model.js';
 
 const flush = () => new Promise(resolve => setImmediate(resolve));
 const tick = () => new Promise(resolve => setTimeout(resolve, 12));
@@ -77,4 +77,50 @@ test('chapter nesting maps to sentence jumps and prompts keep provider keys out 
   assert.match(prompt, /Bearer UPLOAD_CODE/);
   assert.match(prompt, /Never ask for a speech key/);
   assert.match(prompt, /http:\/\/localhost:3000\/canvas\/guide.html/);
+});
+
+test('a sentence click starts speech from idle or paused, and can restart the current sentence', async t => {
+  const f = fixture(t);
+  await f.player.load(sentences, { play: false, sessionId: 'canvas-clicks' });
+  await f.player.seekSentence(1); await flush();
+  assert.equal(f.player.getState().sentenceIndex, 1);
+  assert.equal(f.player.getState().loading, true);
+  assert.equal(f.calls[0].text, 'Second thought.');
+  f.calls[0].chunk(); f.calls[0].done(); await flush();
+  f.context.advanceFrames(12000); await tick();
+  f.player.pause();
+  assert.equal(f.player.getState().status, 'paused');
+  await f.player.seekSentence(2); await flush();
+  assert.equal(f.player.getState().sentenceIndex, 2);
+  assert.equal(f.player.getState().loading, true);
+  assert.ok(f.calls.some(call => call.text === 'Third thought.' && !call.signal.aborted));
+  f.player.pause();
+  await f.player.seekSentence(2); await flush();
+  assert.equal(f.player.getState().loading, true);
+  assert.equal(f.player.getState().sentenceIndex, 2);
+});
+
+test('page ranges keep chapters separate and locate the page after a sentence change or saved position', () => {
+  const model = canvasSentences({ chapters: [
+    { _id: 'a', title: 'First chapter', pages: [
+      { _id: 'a1', title: 'First page', sentences: sentences.slice(0, 2) },
+      { _id: 'a2', title: 'Second page', sentences: sentences.slice(2, 3) },
+    ], subchapters: [] },
+    { _id: 'b', title: 'Section', pages: [], subchapters: [
+      { _id: 'c', title: 'Child chapter', pages: [{ _id: 'c1', sentences: sentences.slice(3) }], subchapters: [] },
+    ] },
+  ] });
+  assert.equal(model.pages.length, 3);
+  assert.equal(canvasPage(model, 1).id, 'a1');
+  assert.equal(canvasPage(model, 2).id, 'a2');
+  assert.equal(canvasPage(model, 2).number, 2);
+  assert.equal(canvasPage(model, 2).total, 2);
+  assert.equal(canvasPage(model, 3).chapterId, 'c');
+  assert.equal(canvasPage(model, 3).number, 1);
+  assert.equal(model.chapters[1].startIndex, model.pages[2].startIndex);
+  assert.equal(canvasPage(model, 4), undefined);
+  const empty = canvasSentences({ chapters: [] });
+  assert.deepEqual(empty.pages, []);
+  assert.deepEqual(empty.chapters, []);
+  assert.equal(canvasPage(empty, 0), undefined);
 });
