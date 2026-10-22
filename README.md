@@ -26,7 +26,7 @@ The saved example uses Kokoro's Heart voice and the word times from the same spe
 Playback needs no server speech request.
 It includes no Ask or Explain buttons.
 
-Choose **Send text** in the toolbar. Copy the prompt into your AI.
+Choose **Upload text** in the toolbar. Copy the prompt into your AI.
 Add your task or source text. Your AI creates a reading and returns its player link.
 
 The guide explains the JSON format and how to send text. It also gives optional tips for readings and teacher explanations.
