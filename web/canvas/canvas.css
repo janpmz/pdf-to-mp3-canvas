@@ -15,7 +15,8 @@ button, input, select, textarea { font: inherit; }
 .canvas-menu { display: block; margin: 0; }
 .canvas-menu summary { list-style: none; }
 .canvas-menu .player-menu-icon { display: block; width: 20px; height: 20px; background: currentColor; mask: url("../assets/share/dots-three-vertical.svg") center / contain no-repeat; }
-.canvas-page.is-focus-mode #focusReadingSettings > #voiceSetting { display: inline-flex !important; align-items: center; gap: 8px; color: #a3a3a3; font: 500 12px/20px "Site Inter", system-ui, sans-serif; }
+.canvas-page.is-focus-mode #focusReadingSettings { display: flex; align-items: center; gap: 24px; }
+.canvas-page.is-focus-mode #focusReadingSettings > :is(#voiceSetting, #paceSetting) { display: inline-flex !important; align-items: center; gap: 8px; color: #a3a3a3; font: 500 12px/20px "Site Inter", system-ui, sans-serif; }
 .canvas-page.is-focus-mode .canvas-menu .toolbar-more-menu-panel { border-color: #333; color: #d4d4d4; background: #111; box-shadow: 0 16px 38px rgb(0 0 0 / 30%); }
 .canvas-page.is-focus-mode .canvas-menu :is(.toolbar-more-menu-link, .canvas-voice-setting) { color: #d4d4d4; }
 .canvas-page.is-focus-mode .canvas-menu .toolbar-more-menu-link:hover { color: #f5f5f5; background: #202020; }
@@ -76,3 +77,15 @@ body.canvas-guide-page { height: auto; overflow: visible; }
 .guide-eyebrow + h1 { margin-top: 0; }
 .guide h2 { margin-top: 36px; font-size: 20px; }
 .guide pre { padding: 20px; border: 1px solid #d5dfe7; border-radius: 12px; background: #f8fafc; font-size: 12px; overflow-x: auto; }
+
+@media (max-width: 600px) {
+  .canvas-page.is-focus-mode .app-toolbar.app-toolbar-page { grid-template-columns: max-content minmax(0, 1fr) 44px; column-gap: 8px; padding-inline: 16px; }
+  .canvas-page.is-focus-mode .app-toolbar > #focusToolbarMenu { width: 44px; }
+  .canvas-page.is-focus-mode #focusReadingSettings { justify-self: center; gap: 12px; }
+  .canvas-page.is-focus-mode #focusReadingSettings > :is(#voiceSetting, #paceSetting) { gap: 4px; font-size: 11px; }
+}
+@media (max-width: 360px) {
+  .canvas-page.is-focus-mode .app-toolbar.app-toolbar-page { column-gap: 4px; padding-inline: 12px; }
+  .canvas-page.is-focus-mode #focusReadingSettings { gap: 8px; }
+  .canvas-page.is-focus-mode #focusReadingSettings > :is(#voiceSetting, #paceSetting) { font-size: 10px; }
+}

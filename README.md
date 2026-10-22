@@ -1,6 +1,6 @@
 # Free Canvas test
 
-This local `free-canvas` branch uses the existing Kokoro service. Users send text, open Canvas, and press Play. They need no key or account. Canvas uses the website’s player layout and its unchanged player-page.css: chapter sidebar, one page at a time, page arrows, and word highlights. Click a sentence to play it. Chapter and page jumps keep speech paused when it was paused. Canvas opens in dark focus mode at every window size; add `focus=0` to the link to open the page view. The focus button uses the website’s focus view and keeps the same speech and word times. Escape returns to the page view. Voice selection and the Canvas menu stay available in focus mode at every window size. Ask and Explain are absent. Speed stays at Normal for this test.
+This local `free-canvas` branch uses the existing Kokoro service. Users send text, open Canvas, and press Play. They need no key or account. Canvas uses the website’s player layout and its unchanged player-page.css: chapter sidebar, one page at a time, page arrows, and word highlights. Click a sentence to play it. Chapter and page jumps keep speech paused when it was paused. Canvas opens in dark focus mode at every window size; add `focus=0` to the link to open the page view. The focus button uses the website’s focus view and keeps the same speech and word times. Escape returns to the page view. Voice and Speed stay side by side in the focus toolbar, with the Canvas menu beside them, at every window size. Ask and Explain are absent. Speed stays at Normal for this test.
 
 ## Run locally
 

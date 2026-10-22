@@ -177,9 +177,8 @@ function placeReaderTools() {
   if (wideCard) $('playerCardWindows').append($('focusModeButton'));
   else $('playerFooter').prepend($('focusModeButton'));
   (wideCard ? $('readingSettings') : $('footerTools')).append($('autoButton'));
-  const settings = wideCard ? $('readingSettings') : $('menuReadingSettings');
-  (focused ? $('focusReadingSettings') : settings).append($('voiceSetting'));
-  settings.append($('paceSetting'));
+  const settings = focused ? $('focusReadingSettings') : wideCard ? $('readingSettings') : $('menuReadingSettings');
+  settings.append($('voiceSetting'), $('paceSetting'));
   $('focusReadingSettings').hidden = !focused;
   $('canvasMenu').classList.toggle('mobile-toolbar-menu', focused);
   (focused ? $('focusToolbarMenu') : $('playerSiteMenu')).append($('canvasMenu'));
