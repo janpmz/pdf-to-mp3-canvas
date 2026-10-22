@@ -178,8 +178,12 @@ function placeReaderTools() {
   else $('playerFooter').prepend($('focusModeButton'));
   (wideCard ? $('readingSettings') : $('footerTools')).append($('autoButton'));
   const settings = wideCard ? $('readingSettings') : $('menuReadingSettings');
-  settings.append($('voiceSetting'), $('paceSetting'));
-  if (active && [$("focusModeButton"), $("autoButton"), $("voiceSetting"), $("paceSetting")].some(node => node.contains(active))) active.focus({ preventScroll: true });
+  (focused ? $('focusReadingSettings') : settings).append($('voiceSetting'));
+  settings.append($('paceSetting'));
+  $('focusReadingSettings').hidden = !focused;
+  $('canvasMenu').classList.toggle('mobile-toolbar-menu', focused);
+  (focused ? $('focusToolbarMenu') : $('playerSiteMenu')).append($('canvasMenu'));
+  if (active && [$("focusModeButton"), $("autoButton"), $("voiceSetting"), $("paceSetting"), $("canvasMenu")].some(node => node.contains(active))) active.focus({ preventScroll: true });
 }
 function updateFocusSentence() {
   const sentence = currentState?.sentences[currentState.sentenceIndex];

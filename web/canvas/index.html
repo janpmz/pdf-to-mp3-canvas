@@ -9,14 +9,15 @@
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data:; connect-src 'self' http://localhost:8702 http://127.0.0.1:8702; base-uri 'none'; form-action 'none'; object-src 'none'" />
   <title>Canvas — PDF TO MP3</title>
   <link rel="icon" href="../favicon.ico" />
-  <link rel="stylesheet" href="./canvas.css?v=free-player-focus-default-1" />
-  <script type="module" src="./canvas.js?v=free-player-focus-default-1"></script>
+  <link rel="stylesheet" href="./canvas.css?v=free-focus-controls-1" />
+  <script type="module" src="./canvas.js?v=free-focus-controls-1"></script>
 </head>
 <body class="canvas-page player-page content-page">
   <main class="player-stage">
     <header class="app-toolbar app-toolbar-overlay app-toolbar-unified app-toolbar-page">
       <div class="app-toolbar-brand-row app-toolbar-left"><a class="app-toolbar-brand" href="../" aria-label="PDF TO MP3 home">PDF TO MP3</a></div>
-      <div class="app-toolbar-right"><a class="toolbar-text-link" href="./guide.html">Guide for AI agents</a></div>
+      <div id="focusReadingSettings" class="app-toolbar-center" hidden></div>
+      <div id="focusToolbarMenu" class="app-toolbar-right"><a class="toolbar-text-link" href="./guide.html">Guide for AI agents</a></div>
     </header>
     <section id="welcome" class="welcome subscription-main">
       <div class="subscription-heading">
@@ -63,8 +64,9 @@
             </div>
             <div id="playerCardWindows" class="player-card-windows"></div>
             <button id="chaptersButton" class="player-toolbar-control canvas-chapters-button" type="button" aria-expanded="false" aria-controls="chapterSidebar" hidden>Chapters</button>
+            <div id="playerSiteMenu">
             <details id="canvasMenu" class="toolbar-more-menu canvas-menu">
-              <summary class="player-toolbar-control" aria-label="Canvas menu"><span class="player-toolbar-icon player-menu-icon" aria-hidden="true"></span></summary>
+              <summary class="player-toolbar-control toolbar-more-menu-button" aria-label="Canvas menu"><span class="player-toolbar-icon player-menu-icon" aria-hidden="true"></span></summary>
               <nav class="toolbar-more-menu-panel" aria-label="Canvas">
                 <div id="menuReadingSettings" class="canvas-menu-settings"></div>
                 <button class="toolbar-more-menu-link" id="promptButton" type="button" hidden>Copy prompt</button>
@@ -72,6 +74,7 @@
                 <a class="toolbar-more-menu-link" href="./guide.html">Guide for AI agents</a>
               </nav>
             </details>
+            </div>
             <a class="player-exit-button" href="./" aria-label="Close player" title="Close player"><span class="player-close-icon" aria-hidden="true"></span></a>
           </div>
         </header>
