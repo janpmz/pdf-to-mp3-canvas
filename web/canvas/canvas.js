@@ -328,7 +328,7 @@ async function preparePrompt() {
       ? canvasPrompt({ canvas, apiBase, uploadCode: access.upload_code, expiresAt: access.upload_expires_at })
       : connectAiPrompt(new URL('./guide.html', location.href).href);
     $('promptText').value = prompt;
-    $('promptTitle').textContent = 'Send text into the player';
+    $('promptTitle').textContent = 'Upload text into the player';
     $('promptDescription').hidden = false;
     $('copyPromptText').textContent = 'Copy';
     $('promptDialog').showModal();
