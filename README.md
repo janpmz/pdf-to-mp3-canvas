@@ -1,6 +1,6 @@
 # PDFTOMP3 Text Player Canvas
 
-PDFTOMP3-Canvas is a text player for AI agents. It uses text-to-speech. The AI sends text into the canvas, and the user can listen sentence by sentence.
+PDFTOMP3-Canvas is a free text player for AI agents. It uses text-to-speech. The AI sends text into the canvas, and the user can listen sentence by sentence.
 
 Example: [Try the player](https://pdftomp3.com/canvas/)
 
