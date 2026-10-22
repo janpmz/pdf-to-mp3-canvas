@@ -13,7 +13,7 @@ const pollInterval = 3000;
 let canvas = null, model = { chapters: [], sentences: [], pages: [] }, currentState = null;
 let selectedId = '', renderedPageId = '', fullRows = [], highlighted = [];
 let focusSentenceId = '', focusWords = [], focusSwipe = null;
-let pollTimer, etag, refreshing = false, firstLoad = true;
+let pollTimer, etag, refreshing = false, firstLoad = true, initialViewPending = true;
 let lastSavedSentence = '', noticeTimer;
 const storage = {
   get(key, fallback) { try { return JSON.parse(localStorage.getItem(`canvas:${key}`)) ?? fallback; } catch { return fallback; } },
@@ -263,6 +263,10 @@ async function refresh() {
     } else await player.updateSentences(model.sentences, { sessionId: canvasId });
     renderChapters();
     renderFullText(true);
+    if (initialViewPending && model.sentences.length) {
+      initialViewPending = false;
+      setFocusMode(params.get('focus') !== '0', { moveFocus: false });
+    }
   } catch (error) {
     if (error.status === 404) {
       model = { chapters: [], sentences: [], pages: [] }; await player.load([], { play: false });
