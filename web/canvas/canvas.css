@@ -17,6 +17,7 @@ button, input, select, textarea { font: inherit; }
 .canvas-menu .player-menu-icon { display: block; width: 20px; height: 20px; background: currentColor; mask: url("../assets/share/dots-three-vertical.svg") center / contain no-repeat; }
 .canvas-page.is-focus-mode #focusReadingSettings { display: flex; align-items: center; gap: 24px; }
 .canvas-page.is-focus-mode #focusReadingSettings > :is(#voiceSetting, #paceSetting) { display: inline-flex !important; align-items: center; gap: 8px; color: #a3a3a3; font: 500 12px/20px "Site Inter", system-ui, sans-serif; }
+.canvas-page.is-focus-mode .player-footer .footer-tools { right: 36px; }
 .canvas-page.is-focus-mode .canvas-menu .toolbar-more-menu-panel { border-color: #333; color: #d4d4d4; background: #111; box-shadow: 0 16px 38px rgb(0 0 0 / 30%); }
 .canvas-page.is-focus-mode .canvas-menu :is(.toolbar-more-menu-link, .canvas-voice-setting) { color: #d4d4d4; }
 .canvas-page.is-focus-mode .canvas-menu .toolbar-more-menu-link:hover { color: #f5f5f5; background: #202020; }
@@ -62,6 +63,7 @@ button, input, select, textarea { font: inherit; }
   .canvas-page dialog.chapter-picker { left: auto; }
 }
 @media (max-width: 720px) {
+  .canvas-page.is-focus-mode .player-footer .focus-mode-button { top: 32px; }
   .canvas-page .player-card-position .chapter-position-label { display: none; }
   .canvas-page .player-card-header { gap: 4px; }
   .canvas-page .canvas-chapters-button { padding-inline: 8px; }
