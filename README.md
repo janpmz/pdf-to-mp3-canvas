@@ -1,32 +1,53 @@
-# Free Canvas test
+# PDFTOMP3 Text Player Canvas
 
-This local `free-canvas` branch uses the existing Kokoro service. Users send text, open Canvas, and press Play. They need no key or account. Canvas uses the website’s player layout and its unchanged player-page.css: chapter sidebar, one page at a time, page arrows, and word highlights. Click a sentence to play it. Chapter and page jumps keep speech paused when it was paused. Canvas opens in dark focus mode at every window size; add `focus=0` to the link to open the page view. The focus button uses the website’s focus view and keeps the same speech and word times. Escape returns to the page view. Voice and Speed stay side by side in the focus toolbar, with the Canvas menu beside them, at every window size. Ask and Explain are absent. Speed stays at Normal for this test.
+PDFTOMP3-Canvas is a text player for AI agents. It uses text-to-speech. The AI sends text into the canvas, and the user can listen sentence by sentence.
 
-## Run locally
+Example: [Try the player](https://pdftomp3.com/canvas/?example=1)
 
-Needs Node.js 20 or newer and MongoDB. Install the packages, copy `node/.env.example` to `node/.env`, and set the two `FREETTS_` values to the existing service settings. Keep that file out of Git.
+## Use from your AI
+
+Paste this prompt into an AI that can read web pages and send requests:
+
+```text
+Send text into the PDF TO MP3 Canvas please so I can listen to it, and then open the player link.
+Read https://pdftomp3.com/canvas/guide.html.
+
+[My request / explain which text you want to listen to]
+```
+
+The guide explains the JSON format and how to send text. It also gives optional tips for readings and teacher explanations.
+
+The AI agent needs to:
+
+1. Prepare the spoken text.
+2. Send it to the server in the required JSON format, as shown in the guide.
+3. Open the returned link so the user can listen.
+
+No account or plugin is needed. Anyone with the link can read the text.
+
+## Speech and privacy
+
+- Speech uses Kokoro on the server. Users need no speech key. The browser calls the Canvas server, which calls the speech service. The service key stays on the server.
+- Canvas prepares the current sentence and up to two ahead. Changing the voice does not rebuild speech for the whole reading.
+- Word highlights use the times Kokoro returns with the speech.
+- Ask and Explain are not included. Speed currently stays at Normal.
+- Audio and reading position stay in your browser. Text stays on the server, so the same link works on other devices. Canvases do not expire.
+
+## Local use
+
+Needs Node.js 20 or newer and a running MongoDB. Copy `node/.env.example` to `node/.env` and set `FREETTS_URL` and `FREETTS_SECRET` for your Kokoro service. Keep `node/.env` out of Git. The example settings use local port 3000.
+
+From the repository root:
 
 ```sh
 npm --prefix node install
 npm --prefix node start
 ```
 
-Open [Canvas](http://localhost:3000/canvas/) or [the live speech test](http://localhost:3000/canvas/?example=1). The test creates a reading and uses real Kokoro speech; it does not play the old recorded demo. The default server still uses port 8702 unless `CANVAS_PORT=3000` is set in `node/.env`.
+Open [Canvas](http://localhost:3000/canvas/) or the [AI guide](http://localhost:3000/canvas/guide.html).
 
-The [AI guide](http://localhost:3000/canvas/guide.html) covers text uploads. Text and sharing work as before. Anyone with the reading link can read and listen.
+## Review the source
 
-## Speech
+The browser code is in `web/canvas/`; the server code is in `node/src/canvas/`. To check how speech works, start with `canvas.js` and `free-speech.js` in the browser folder, then `freeSpeech.js` in the server folder.
 
-The browser requests speech for a saved sentence. The server reads that sentence, checks the voice against the reading language, queues Kokoro, checks its progress, and returns 24 kHz mono PCM sound. The service key stays on the server. The browser never talks to Google or asks for a key.
-
-Playback waits for the current sentence, then prepares up to two more within a 120-word limit. Repeat uses saved audio. A bounded server cache reuses recent sound. Both sites still share the existing speech queue, so other jobs can delay this test. Word highlights use Kokoro’s word start and end times, checked against the audio length and file hash. The browser saves those times with the sound. If the service has no word times for a language, the sentence still plays without word highlights.
-
-`node/src/canvas/freeSpeech.js` handles the service. `web/canvas/free-speech.js` plays its replies. The voice list comes unchanged from the existing `freetts/node/src/voices.js` in the local free speech project.
-
-## Checks
-
-```sh
-npm --prefix node test
-```
-
-The tests use fake speech unless you start the local server with the real service settings. This branch has not been pushed or deployed.
+From the main PDFTOMP3 project, export just Canvas with `node canvas/export.mjs /tmp/pdftomp3-canvas`. The output folder must not exist yet.
