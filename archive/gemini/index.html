@@ -1,0 +1,187 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="robots" content="noindex, nofollow" />
+  <meta name="referrer" content="no-referrer" />
+  <meta name="canvas-api" content="" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data:; connect-src 'self' http://localhost:8702 http://127.0.0.1:8702 wss://generativelanguage.googleapis.com; base-uri 'none'; form-action 'none'; object-src 'none'" />
+  <title>Canvas — PDF TO MP3</title>
+  <link rel="icon" href="../favicon.ico" />
+  <link rel="stylesheet" href="./canvas.css?v=20261019-focus-only" />
+  <script type="module" src="./canvas.js?v=20261019-focus-only"></script>
+</head>
+<body class="canvas-page content-page">
+  <main class="player-stage">
+    <header class="app-toolbar app-toolbar-overlay app-toolbar-unified app-toolbar-page">
+      <div class="app-toolbar-brand-row app-toolbar-left">
+        <a class="app-toolbar-brand" href="../" aria-label="PDF TO MP3 home">PDF TO MP3</a>
+      </div>
+      <div class="app-toolbar-center">
+        <div class="listening-tools" id="readingSettings" hidden>
+          <label class="listening-setting">Voice <select id="voice" aria-label="Voice"><option>Enceladus</option><option>Kore</option><option>Sadachbia</option><option>Zephyr</option></select></label>
+          <label class="listening-setting">Speed <select id="pace" aria-label="Speed"><option value="slow">Slow</option><option value="normal" selected>Normal</option><option value="fast">Fast</option></select></label>
+        </div>
+      </div>
+      <div class="app-toolbar-right">
+        <details id="canvasMenu" class="toolbar-more-menu canvas-menu">
+          <summary class="toolbar-more-menu-button" aria-label="Canvas menu"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="1.8" /><circle cx="12" cy="12" r="1.8" /><circle cx="19" cy="12" r="1.8" /></svg></summary>
+          <nav class="toolbar-more-menu-panel" aria-label="Canvas">
+            <button class="toolbar-more-menu-link" id="chaptersButton" type="button" aria-expanded="false" aria-controls="chapterSidebar" hidden>Chapters</button>
+            <button class="toolbar-more-menu-link" id="promptButton" type="button" hidden>Copy prompt</button>
+            <button class="toolbar-more-menu-link" id="shareButton" type="button" hidden>Share</button>
+            <button class="toolbar-more-menu-link" id="keyButton" type="button" hidden>API Key</button>
+            <a class="toolbar-more-menu-link" href="./">New canvas</a>
+            <a class="toolbar-more-menu-link" href="./guide.html">Guide for AI agents</a>
+          </nav>
+        </details>
+      </div>
+      <p id="message" class="canvas-notice" role="status" aria-live="polite" hidden></p>
+    </header>
+    <section id="welcome" class="welcome subscription-main">
+      <div class="subscription-heading">
+      <h1>Canvas</h1>
+      <p class="welcome-copy">Let your AI prepare the words. Open your canvas and listen, one sentence at a time.</p></div>
+      <form id="createForm" class="subscription-card create-card">
+        <label for="canvasTitle">Give your canvas a title</label>
+        <input class="subscription-input" id="canvasTitle" name="title" type="text" maxlength="160" placeholder="What would you like to hear?" required />
+        <label for="canvasLanguage">Language</label>
+        <select class="subscription-input" id="canvasLanguage" name="language">
+          <option value="en">English</option><option value="de">Deutsch</option><option value="es">Español</option>
+          <option value="fr">Français</option><option value="it">Italiano</option><option value="pt">Português</option>
+          <option value="ja">日本語</option><option value="zh">中文</option><option value="hi">हिन्दी</option>
+        </select>
+        <button class="subscription-button subscription-button-primary" id="createButton" type="submit">Create canvas</button>
+        <p class="quiet">No sign-up. Bring your own Gemini key when you want to listen.</p>
+      </form>
+      <ol class="steps"><li>Create a canvas.</li><li>Copy its prompt into your AI.</li><li>Read and listen here.</li></ol>
+      <a class="guide-link" href="./guide.html">Guide for AI agents</a>
+    </section>
+
+    <section id="reader" class="reading-heading" hidden>
+      <p id="canvasName"></p><h1 id="chapterName"></h1>
+    </section>
+    <div id="emptyCanvas" class="focus-reader" hidden>
+      <div class="empty-canvas subscription-main">
+        <h2>Your canvas is ready.</h2>
+        <p id="emptyMessage">Waiting for your AI to send text.</p>
+        <button id="emptyPrompt" class="subscription-button" type="button" hidden>Copy prompt for your AI</button>
+        <p class="quiet" id="emptyTip">Text will appear here as it arrives. You can keep this page open.</p>
+      </div>
+    </div>
+    <div id="focusReader" class="focus-reader" aria-label="Current sentence" tabindex="-1" hidden>
+      <button id="focusSentence" class="focus-sentence" type="button" aria-live="polite" aria-atomic="true"></button>
+    </div>
+      <footer id="playerFooter" class="player-footer" hidden>
+        <div class="action-row">
+          <button class="speak-pill" id="explainButton" type="button" aria-pressed="false" disabled aria-label="Explain this sentence">
+            <svg class="speak-idle-icon" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="m12 3 1.4 4.1 4.1 1.4-4.1 1.4L12 14l-1.4-4.1-4.1-1.4 4.1-1.4L12 3Z" />
+              <path d="m19 14 .8 2.2L22 17l-2.2.8L19 20l-.8-2.2L16 17l2.2-.8L19 14Z" />
+            </svg>
+            <span class="speak-waveform" aria-hidden="true">
+              <i></i><i></i><i></i><i></i>
+            </span>
+            <span class="speak-label">Explain</span>
+            <svg class="speak-close-icon" viewBox="0 0 14 14" aria-hidden="true">
+              <path d="M3 3l8 8M11 3l-8 8" />
+            </svg>
+          </button>
+
+          <div class="player-controls" aria-label="Player controls">
+            <button class="control" id="repeatButton" type="button" aria-label="Repeat sentence">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M3 12a9 9 0 1 0 9-9c-2.5 0-4.9 1-6.7 2.7L3 8M3 3v5h5" />
+              </svg>
+            </button>
+
+            <button class="control" id="previousButton" type="button" aria-label="Previous sentence">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M6 5v14" />
+                <path d="m18 6-9 6 9 6V6Z" />
+              </svg>
+            </button>
+
+            <button class="control control-play control-purple" id="playButton" type="button" aria-label="Play">
+              <span class="apple-spinner loading-icon" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span>
+              <svg class="play-icon" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M7.5 5.5v13l10-6.5-10-6.5Z" />
+              </svg>
+              <svg class="pause-icon" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M8 5v14M16 5v14" />
+              </svg>
+            </button>
+
+            <button class="control" id="nextButton" type="button" aria-label="Next sentence">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M18 5v14" />
+                <path d="m6 6 9 6-9 6V6Z" />
+              </svg>
+            </button>
+
+          </div>
+
+          <button class="speak-pill" id="askButton" type="button" aria-pressed="false" disabled aria-label="Ask about this sentence">
+            <svg class="speak-idle-icon" viewBox="0 0 24 24" aria-hidden="true">
+              <rect x="9" y="3" width="6" height="11" rx="3" />
+              <path d="M6 11a6 6 0 0 0 12 0M12 17v4M9 21h6" />
+            </svg>
+            <span class="speak-waveform" aria-hidden="true">
+              <i></i><i></i><i></i><i></i>
+            </span>
+            <span class="speak-label">Ask</span>
+            <svg class="speak-close-icon" viewBox="0 0 14 14" aria-hidden="true">
+              <path d="M3 3l8 8M11 3l-8 8" />
+            </svg>
+          </button>
+        </div>
+
+        <div class="footer-tools" role="group" aria-label="Listening tools">
+          <button class="tool-item tool-item-action tool-item-active" id="autoButton" type="button" aria-label="Turn auto play off" aria-pressed="true">
+            <span class="glass-orb">
+              <svg class="auto-icon" viewBox="0 0 28 28" aria-hidden="true">
+                <path d="M4 7v14l8-7-8-7Z" />
+                <path d="M14 7v14l8-7-8-7Z" />
+              </svg>
+            </span>
+            <span class="tool-label" id="autoLabel">Auto play</span>
+          </button>
+
+        </div>
+      </footer>
+  </main>
+
+  <dialog id="chapterSidebar" class="tips-panel canvas-chapters" role="dialog" aria-label="Chapters">
+    <button id="closeChapters" class="tips-panel-close" type="button" aria-label="Close chapters"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18" /></svg></button>
+    <div class="tips-panel-content">
+      <div class="chapter-sidebar-header"><h2>Chapters</h2></div>
+      <nav id="chapterList" class="chapter-sidebar-list" aria-label="Chapter list"></nav>
+    </div>
+  </dialog>
+
+  <dialog id="keyDialog" class="canvas-dialog subscription-main subscription-card" role="dialog" aria-labelledby="keyTitle">
+    <form id="keyForm">
+      <div class="dialog-heading"><h2 id="keyTitle">Your Gemini speech key</h2><button class="subscription-button" id="closeKey" type="button">Close</button></div>
+      <p>The key stays locally in your browser and is not sent or stored on our server. This page is open source: <a href="https://github.com/janpmz/pdf-to-mp3-canvas" target="_blank" rel="noreferrer noopener">GitHub repo</a></p>
+      <label for="geminiKey">Gemini API key</label>
+      <input class="subscription-input" id="geminiKey" type="text" maxlength="1024" required autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" writingsuggestions="false" placeholder="Paste your Gemini key" />
+      <p class="quiet">Create a key here: <a href="https://aistudio.google.com/api-keys" target="_blank" rel="noreferrer noopener">Create Gemini key</a><br /><a href="https://ai.google.dev/gemini-api/docs/billing" target="_blank" rel="noreferrer noopener">Activate billing</a> for the key’s project in Google AI Studio.</p>
+      <div class="dialog-actions"><button class="subscription-button" id="forgetKey" type="button" hidden>Forget key</button><button class="subscription-button subscription-button-primary" type="submit">Use key</button></div>
+    </form>
+  </dialog>
+
+  <dialog id="promptDialog" class="canvas-dialog prompt-dialog subscription-main subscription-card" role="dialog" aria-labelledby="promptTitle">
+    <div class="dialog-heading"><h2 id="promptTitle">Prompt for your AI</h2><button class="subscription-button" id="closePrompt" type="button">Close</button></div>
+    <p>Paste this into an AI that can send web requests. Add your task or attach your source there.</p>
+    <textarea id="promptText" readonly aria-label="Prompt for your AI"></textarea>
+    <button id="copyPromptText" class="subscription-button subscription-button-primary" type="button">Copy prompt</button>
+    <details id="ownerAccess" class="owner-access" hidden>
+      <summary>Owner access</summary>
+      <p>Keep this code if you want to renew upload access or delete this canvas from another browser. Keep it out of the shared link.</p>
+      <input class="subscription-input" id="ownerCode" type="text" readonly aria-label="Owner code" />
+      <button class="subscription-button" id="deleteCanvas" type="button">Delete canvas</button>
+    </details>
+  </dialog>
+</body>
+</html>

@@ -1,12 +1,5 @@
-import { createExampleConversation } from './example-conversation.js';
-
-const recordings = [
-  ['003', 'Control the playback sentence by sentence.'],
-  ['009', 'You decide when to hear a sentence again or move to the next one.'],
-  ['010', 'When your attention shifts away, listen to the sentence again.'],
-  ['011', 'Move to the next sentence at your own pace.'],
-  ['012', 'You can also choose to play the next sentence automatically.'],
-];
+import { decodeFreePcm, mapWordTimes } from './free-speech.js';
+import { EXAMPLE_VOICE, EXAMPLE_RECORDINGS as recordings } from './example-data.js?v=20261022-example-2';
 
 function chapter(id, title, items, subchapters = []) {
   return { _id: `chapter_example_${id}`, title, subchapters, pages: items.length ? [{
@@ -15,56 +8,69 @@ function chapter(id, title, items, subchapters = []) {
   }] : [] };
 }
 
-export function createCanvasExample({ fetchAudio = (...args) => fetch(...args),
-  OfflineAudioContextClass = globalThis.OfflineAudioContext || globalThis.webkitOfflineAudioContext,
-} = {}) {
-  const canvas = { _id: 'example', title: 'Try PDF TO MP3 Canvas', language: 'en', revision: 1,
-    url: new URL('./?example=1', import.meta.url).href,
-    chapters: [
-      chapter('listen', 'Listen sentence by sentence', recordings.slice(0, 2), [
-        chapter('pause', 'Take your time', recordings.slice(2, 4)),
-      ]),
-      chapter('autoplay', 'Choose when to continue', recordings.slice(4)),
-    ],
+export function createCanvasExample({ fetchAudio = (...args) => fetch(...args) } = {}) {
+  const canvas = { _id: 'example', title: 'Try PDF TO MP3 Canvas', language: 'en', revision: 2,
+    url: new URL('./', import.meta.url).href,
+    chapters: [chapter('try', 'Try the free player', recordings)],
   };
-  const audioFiles = new Map(recordings.map(([id, text]) => [text, new URL(`./example-audio/${id}.mp3`, import.meta.url).href]));
-  let decoder;
+  let manifestPromise;
+  async function manifest(signal) {
+    manifestPromise ||= fetchAudio(new URL('./example-audio/kokoro-manifest.json?v=kokoro-2', import.meta.url).href,
+      { credentials: 'omit', referrerPolicy: 'no-referrer' }).then(async response => {
+        if (!response.ok) throw new Error('The example word times could not load. Please try again.');
+        const data = await response.json();
+        if (data.version !== 1 || data.source !== 'kokoro' || data.voice !== EXAMPLE_VOICE || data.sample_rate !== 24000) {
+          throw new Error('The example speech and word times do not match. Reload the page.');
+        }
+        return data;
+      }).catch(error => { manifestPromise = null; throw error; });
+    const data = await manifestPromise;
+    signal?.throwIfAborted();
+    return data;
+  }
   return {
     canvasId: canvas._id,
     pollInterval: 0,
-    settingsKey: 'example-settings',
-    speechError: 'The example audio could not load. Please try again.',
-    createConversation(options) {
-      return createExampleConversation({ ...options,
-        askFile: new URL('./example-audio/ask.mp3', import.meta.url).href,
-        explanationFiles: new Map(recordings.map(([id, text]) => [text, new URL(`./example-audio/explain-${id}.mp3`, import.meta.url).href])),
-      });
-    },
     configureControls({ voice, pace }) {
-      voice.selectedOptions[0].textContent = 'Demo voice';
+      const option = document.createElement('option'); option.value = EXAMPLE_VOICE; option.textContent = 'Heart';
+      voice.replaceChildren(option);
       pace.value = 'normal';
       for (const control of [voice, pace]) {
         control.disabled = true;
-        control.title = 'This example uses fixed audio.';
+        control.title = 'This example uses saved Kokoro speech with the Heart voice.';
       }
     },
     async request(path) {
       if (path !== '/canvases/example') throw new Error('The example cannot be changed.');
-      return { data: canvas, tag: 'example-v1' };
+      return { data: canvas, tag: 'kokoro-example-v2' };
     },
     playerOptions: {
-      // Browser file caching and the player's memory cache suffice for these five recordings.
+      // The browser and player keep these three recordings in memory.
       cache: { get: async () => null, put: async () => {} },
       speech: {
         async stream(text, { signal, onChunk }) {
-          const file = audioFiles.get(text);
-          if (!file || !OfflineAudioContextClass) throw new Error('This browser cannot play the example audio.');
-          const reply = await fetchAudio(file, { signal, credentials: 'omit', referrerPolicy: 'no-referrer' });
-          if (!reply.ok) throw new Error('The example audio could not load.');
-          decoder ||= new OfflineAudioContextClass(1, 1, 24000);
-          const audio = await decoder.decodeAudioData(await reply.arrayBuffer());
-          signal.throwIfAborted();
-          onChunk(audio.getChannelData(0), audio.sampleRate);
+          signal?.throwIfAborted();
+          const id = recordings.find(([, passage]) => passage === text)?.[0];
+          const data = await manifest(signal), clip = data.clips?.[id];
+          if (!clip || clip.text !== text || !/^kokoro-[0-9]{3}-[a-f0-9]{16}\.pcm$/.test(clip.file)) {
+            throw new Error('The example speech and word times do not match. Reload the page.');
+          }
+          const reply = await fetchAudio(new URL(`./example-audio/${clip.file}`, import.meta.url).href,
+            { signal, credentials: 'omit', referrerPolicy: 'no-referrer' });
+          if (!reply.ok) throw new Error('The example audio could not load. Please try again.');
+          const buffer = await reply.arrayBuffer();
+          const hash = await crypto.subtle.digest('SHA-256', buffer);
+          const sha256 = Array.from(new Uint8Array(hash), byte => byte.toString(16).padStart(2, '0')).join('');
+          if (sha256 !== clip.audio_sha256 || buffer.byteLength !== clip.bytes ||
+              buffer.byteLength / 48000 !== clip.duration_seconds) {
+            throw new Error('The example speech and word times do not match. Reload the page.');
+          }
+          const samples = decodeFreePcm(buffer);
+          const wordTimings = mapWordTimes(text, clip.words, samples.length / data.sample_rate);
+          if (!wordTimings.length) throw new Error('The example word times do not match its text. Reload the page.');
+          signal?.throwIfAborted();
+          onChunk(samples, data.sample_rate, { wordTimings });
+          return { sampleRate: data.sample_rate, wordTimings };
         },
       },
     },

@@ -9,37 +9,16 @@
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data:; connect-src 'self' http://localhost:8702 http://127.0.0.1:8702; base-uri 'none'; form-action 'none'; object-src 'none'" />
   <title>Canvas — PDF TO MP3</title>
   <link rel="icon" href="../favicon.ico" />
-  <link rel="stylesheet" href="./canvas.css?v=free-sentence-click-1" />
-  <script type="module" src="./canvas.js?v=free-sentence-click-1"></script>
+  <link rel="stylesheet" href="./canvas.css?v=20261022-chapters-dark" />
+  <script type="module" src="./canvas.js?v=20261022-example-2"></script>
 </head>
 <body class="canvas-page player-page content-page">
   <main class="player-stage">
     <header class="app-toolbar app-toolbar-overlay app-toolbar-unified app-toolbar-page">
       <div class="app-toolbar-brand-row app-toolbar-left"><a class="app-toolbar-brand" href="../" aria-label="PDF TO MP3 home">PDF TO MP3</a></div>
       <div id="focusReadingSettings" class="app-toolbar-center" hidden></div>
-      <div id="focusToolbarMenu" class="app-toolbar-right"><a class="toolbar-text-link" href="./guide.html">Guide for AI agents</a></div>
+      <div id="focusToolbarMenu" class="app-toolbar-right"><button id="promptButton" class="canvas-send-text" type="button" aria-haspopup="dialog" aria-controls="promptDialog">Send text</button></div>
     </header>
-    <section id="welcome" class="welcome subscription-main">
-      <div class="subscription-heading">
-      <h1>Canvas</h1>
-      <p class="welcome-copy">Let your AI prepare the words. Open your canvas and listen, one sentence at a time.</p></div>
-      <form id="createForm" class="subscription-card create-card">
-        <label for="canvasTitle">Give your canvas a title</label>
-        <input class="subscription-input" id="canvasTitle" name="title" type="text" maxlength="160" placeholder="What would you like to hear?" required />
-        <label for="canvasLanguage">Language</label>
-        <select class="subscription-input" id="canvasLanguage" name="language">
-          <option value="en">English</option><option value="de">Deutsch</option><option value="es">Español</option>
-          <option value="fr">Français</option><option value="it">Italiano</option><option value="pt">Português</option>
-          <option value="ja">日本語</option><option value="zh">中文</option><option value="hi">हिन्दी</option>
-        </select>
-        <button class="subscription-button subscription-button-primary" id="createButton" type="submit">Create canvas</button>
-        <p class="quiet">No sign-up or key needed. Press Play to listen.</p>
-      </form>
-      <ol class="steps"><li>Create a canvas.</li><li>Copy its prompt into your AI.</li><li>Read and listen here.</li></ol>
-      <a class="guide-link" href="./guide.html">Guide for AI agents</a>
-    </section>
-
-
     <div id="playerLayout" class="player-layout" hidden>
       <div id="playerCard" class="player-card">
         <header class="player-card-header">
@@ -70,7 +49,6 @@
               <nav class="toolbar-more-menu-panel" aria-label="Canvas">
                 <div id="menuReadingSettings" class="canvas-menu-settings"></div>
                 <button class="toolbar-more-menu-link" id="menuChaptersButton" type="button" aria-haspopup="dialog" aria-controls="chapterPicker" aria-expanded="false" hidden>Chapters</button>
-                <button class="toolbar-more-menu-link" id="promptButton" type="button" hidden>Copy prompt</button>
                 <button class="toolbar-more-menu-link" id="shareButton" type="button" hidden>Share</button>
                 <a class="toolbar-more-menu-link" href="./guide.html">Guide for AI agents</a>
               </nav>
@@ -102,7 +80,6 @@
               <div class="empty-canvas subscription-main">
                 <h2>Your canvas is ready.</h2>
                 <p id="emptyMessage">Waiting for your AI to send text.</p>
-                <button id="emptyPrompt" class="subscription-button" type="button" hidden>Copy prompt for your AI</button>
                 <p class="quiet" id="emptyTip">Text will appear here as it arrives. You can keep this page open.</p>
               </div>
             </div>
@@ -174,17 +151,11 @@
     <div class="picker-list chapter-picker-list" id="chapterPickerList"></div>
   </dialog>
   <p id="message" class="canvas-notice" role="status" aria-live="polite" hidden></p>
-  <dialog id="promptDialog" class="canvas-dialog prompt-dialog subscription-main subscription-card" role="dialog" aria-labelledby="promptTitle">
-    <div class="dialog-heading"><h2 id="promptTitle">Prompt for your AI</h2><button class="subscription-button" id="closePrompt" type="button">Close</button></div>
-    <p>Paste this into an AI that can send web requests. Add your task or attach your source there.</p>
-    <textarea id="promptText" readonly aria-label="Prompt for your AI"></textarea>
-    <button id="copyPromptText" class="subscription-button subscription-button-primary" type="button">Copy prompt</button>
-    <details id="ownerAccess" class="owner-access" hidden>
-      <summary>Owner access</summary>
-      <p>Keep this code if you want to renew upload access or delete this canvas from another browser. Keep it out of the shared link.</p>
-      <input class="subscription-input" id="ownerCode" type="text" readonly aria-label="Owner code" />
-      <button class="subscription-button" id="deleteCanvas" type="button">Delete canvas</button>
-    </details>
+  <dialog id="promptDialog" class="canvas-dialog prompt-dialog" role="dialog" aria-labelledby="promptTitle" aria-describedby="promptDescription">
+    <div class="dialog-heading"><h2 id="promptTitle">Send text into the player</h2><button class="prompt-close" id="closePrompt" type="button" aria-label="Close"><span aria-hidden="true"></span></button></div>
+    <p id="promptDescription">Paste this prompt into your ai:</p>
+    <textarea id="promptText" readonly aria-label="Prompt"></textarea>
+    <button id="copyPromptText" class="prompt-copy" type="button">Copy</button>
   </dialog>
 </body>
 </html>

@@ -2,17 +2,29 @@
 
 PDFTOMP3-Canvas is a text player for AI agents. It uses text-to-speech. The AI sends text into the canvas, and the user can listen sentence by sentence.
 
-Example: [Try the player](https://pdftomp3.com/canvas/?example=1)
+Example: [Try the player](https://pdftomp3.com/canvas/)
+
+Canvas opens a saved example when its address has no reading ID.
+The saved example uses Kokoro's Heart voice and the word times from the same speech request.
+Playback needs no server speech request.
+It includes no Ask or Explain buttons.
+
+Choose **Send text** in the toolbar. Copy the prompt into your AI.
+Add your task or source text. Your AI creates a reading and returns its player link.
 
 ## Use from your AI
 
 Paste this prompt into an AI that can read web pages and send requests:
 
 ```text
-Send text into the PDF TO MP3 Canvas please so I can listen to it, and then open the player link.
-Read https://pdftomp3.com/canvas/guide.html.
+Instructions for the AI:
 
-[My request / explain which text you want to listen to]
+Please send text into this player.
+Read https://pdftomp3.com/canvas/guide.html.
+Show or open the player link.
+
+My text or request:
+[Add your text / request here.]
 ```
 
 The guide explains the JSON format and how to send text. It also gives optional tips for readings and teacher explanations.
@@ -23,19 +35,23 @@ The AI agent needs to:
 2. Send it to the server in the required JSON format, as shown in the guide.
 3. Open the returned link so the user can listen.
 
-No account or plugin is needed. Anyone with the link can read the text.
+Users need no account or plugin. Anyone with the link can read the text.
 
 ## Speech and privacy
 
 - Speech uses Kokoro on the server. Users need no speech key. The browser calls the Canvas server, which calls the speech service. The service key stays on the server.
 - Canvas prepares the current sentence and up to two ahead. Changing the voice does not rebuild speech for the whole reading.
 - Word highlights use the times Kokoro returns with the speech.
-- Ask and Explain are not included. Speed currently stays at Normal.
+- Ask and Explain are not included. Speed stays at Normal.
 - Audio and reading position stay in your browser. Text stays on the server, so the same link works on other devices. Canvases do not expire.
 
 ## Local use
 
-Needs Node.js 20 or newer and a running MongoDB. Copy `node/.env.example` to `node/.env` and set `FREETTS_URL` and `FREETTS_SECRET` for your Kokoro service. Keep `node/.env` out of Git. The example settings use local port 3000.
+Needs Node.js 20 or newer and a running MongoDB.
+In the separate Canvas repo, copy `node/.env.example` to `node/.env`.
+In the main repo, use `canvas/env.example` as the source.
+Set `FREETTS_URL` and `FREETTS_SECRET` for your Kokoro service.
+Keep `node/.env` out of Git. The example settings use local port 3000.
 
 From the repository root:
 
@@ -46,8 +62,18 @@ npm --prefix node start
 
 Open [Canvas](http://localhost:3000/canvas/) or the [AI guide](http://localhost:3000/canvas/guide.html).
 
+
 ## Review the source
 
-The browser code is in `web/canvas/`; the server code is in `node/src/canvas/`. To check how speech works, start with `canvas.js` and `free-speech.js` in the browser folder, then `freeSpeech.js` in the server folder.
+The browser code is in `web/canvas/`. The server code is in `node/src/canvas/`.
+To check speech, read `canvas.js` and `free-speech.js` in the browser folder.
+Then read `freeSpeech.js` in the server folder.
 
 From the main PDFTOMP3 project, export just Canvas with `node canvas/export.mjs /tmp/pdftomp3-canvas`. The output folder must not exist yet.
+
+The export copies the player, server code, shared styles, assets, and this README.
+It creates a small package list and example settings. It does not deploy the site.
+The saved Gemini page stays in `canvas/gemini` in the main repo and `archive/gemini` in the export.
+
+To make the saved example again, run `node node/tasks/generateCanvasExampleAudio.js`.
+The task uses the server's free speech settings. It saves each recording with its Kokoro word times.

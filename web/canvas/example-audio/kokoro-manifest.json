@@ -1,0 +1,195 @@
+{
+  "version": 1,
+  "source": "kokoro",
+  "voice": "af_heart",
+  "sample_rate": 24000,
+  "clips": {
+    "101": {
+      "text": "Try our free text to speech player.",
+      "file": "kokoro-101-2553bb34610348ac.pcm",
+      "bytes": 123600,
+      "duration_seconds": 2.575,
+      "audio_sha256": "2553bb34610348acf457cb0864cbd469494b78474c0c5a06ba46f6b5adced7b0",
+      "words": [
+        {
+          "text": "Try",
+          "start": 0.275,
+          "end": 0.5125
+        },
+        {
+          "text": "our",
+          "start": 0.5125,
+          "end": 0.65
+        },
+        {
+          "text": "free",
+          "start": 0.65,
+          "end": 0.875
+        },
+        {
+          "text": "text",
+          "start": 0.875,
+          "end": 1.2
+        },
+        {
+          "text": "to",
+          "start": 1.2,
+          "end": 1.325
+        },
+        {
+          "text": "speech",
+          "start": 1.325,
+          "end": 1.65
+        },
+        {
+          "text": "player",
+          "start": 1.65,
+          "end": 2.325
+        }
+      ]
+    },
+    "102": {
+      "text": "Send your own text into the player to listen to it.",
+      "file": "kokoro-102-5edfbb017d5e2c4e.pcm",
+      "bytes": 158400,
+      "duration_seconds": 3.3,
+      "audio_sha256": "5edfbb017d5e2c4e928f8ccf0c03ccd435954677e4ffb40b55f7dfa2b9c1ff40",
+      "words": [
+        {
+          "text": "Send",
+          "start": 0.3,
+          "end": 0.4875
+        },
+        {
+          "text": "your",
+          "start": 0.4875,
+          "end": 0.6375
+        },
+        {
+          "text": "own",
+          "start": 0.6375,
+          "end": 0.9125
+        },
+        {
+          "text": "text",
+          "start": 0.9125,
+          "end": 1.325
+        },
+        {
+          "text": "into",
+          "start": 1.325,
+          "end": 1.5125
+        },
+        {
+          "text": "the",
+          "start": 1.5125,
+          "end": 1.6
+        },
+        {
+          "text": "player",
+          "start": 1.6,
+          "end": 2
+        },
+        {
+          "text": "to",
+          "start": 2,
+          "end": 2.125
+        },
+        {
+          "text": "listen",
+          "start": 2.125,
+          "end": 2.45
+        },
+        {
+          "text": "to",
+          "start": 2.45,
+          "end": 2.6375
+        },
+        {
+          "text": "it",
+          "start": 2.6375,
+          "end": 3.05
+        }
+      ]
+    },
+    "103": {
+      "text": "Copy the prompt and tell your AI to send text into this player window.",
+      "file": "kokoro-103-b2ce8ab0c98cc760.pcm",
+      "bytes": 229200,
+      "duration_seconds": 4.775,
+      "audio_sha256": "b2ce8ab0c98cc760b4079c4cd61df0da9be05bc76888439828b5d0fa417177f3",
+      "words": [
+        {
+          "text": "Copy",
+          "start": 0.275,
+          "end": 0.5875
+        },
+        {
+          "text": "the",
+          "start": 0.5875,
+          "end": 0.675
+        },
+        {
+          "text": "prompt",
+          "start": 0.675,
+          "end": 1.1375
+        },
+        {
+          "text": "and",
+          "start": 1.1375,
+          "end": 1.275
+        },
+        {
+          "text": "tell",
+          "start": 1.275,
+          "end": 1.4875
+        },
+        {
+          "text": "your",
+          "start": 1.4875,
+          "end": 1.6375
+        },
+        {
+          "text": "AI",
+          "start": 1.6375,
+          "end": 2.3875
+        },
+        {
+          "text": "to",
+          "start": 2.3875,
+          "end": 2.525
+        },
+        {
+          "text": "send",
+          "start": 2.525,
+          "end": 2.7875
+        },
+        {
+          "text": "text",
+          "start": 2.7875,
+          "end": 3.2
+        },
+        {
+          "text": "into",
+          "start": 3.2,
+          "end": 3.3875
+        },
+        {
+          "text": "this",
+          "start": 3.3875,
+          "end": 3.55
+        },
+        {
+          "text": "player",
+          "start": 3.55,
+          "end": 3.875
+        },
+        {
+          "text": "window",
+          "start": 3.875,
+          "end": 4.525
+        }
+      ]
+    }
+  }
+}

@@ -1,6 +1,7 @@
 import { createSentencePlayer } from './sentence-player.js';
 import { createFreeSpeech, FREE_VOICES, freeAudioCacheKey } from './free-speech.js';
-import { canvasPrompt, canvasSentences, canvasPage } from './model.js';
+import { canvasPrompt, connectAiPrompt, canvasSentences, canvasPage } from './model.js';
+import { createCanvasExample } from './example.js?v=20261022-kokoro-2';
 
 const $ = id => document.getElementById(id);
 const configuredApi = document.querySelector('meta[name="canvas-api"]')?.content;
@@ -8,8 +9,10 @@ const local = ['localhost', '127.0.0.1', '[::1]'].includes(location.hostname);
 const apiBase = new URL(configuredApi || (local ? 'http://localhost:8702/canvas-api' : '/canvas-api'), location.href).href.replace(/\/$/, '');
 const params = new URLSearchParams(location.search);
 let canvasId = params.get('id') || '';
-const request = apiRequest;
-const pollInterval = 3000;
+const example = !canvasId || canvasId === 'example' ? createCanvasExample() : null;
+canvasId ||= example?.canvasId || '';
+const request = example?.request || apiRequest;
+const pollInterval = example ? 0 : 3000;
 let canvas = null, model = { chapters: [], sentences: [], pages: [] }, currentState = null;
 let selectedId = '', renderedPageId = '', fullRows = [], highlighted = [];
 let focusSentenceId = '', focusWords = [], focusSwipe = null;
@@ -20,16 +23,18 @@ const storage = {
   set(key, value) { try { localStorage.setItem(`canvas:${key}`, JSON.stringify(value)); return true; } catch { return false; } },
   remove(key) { try { localStorage.removeItem(`canvas:${key}`); return true; } catch { return false; } },
 };
-const settingsKey = 'free-settings';
+const settingsKey = example ? 'free-example-settings' : 'free-settings';
 const settings = storage.get(settingsKey, {});
 $('pace').value = 'normal';
 const player = createSentencePlayer({
   voice: settings.voice, defaultVoice: 'af_heart', voices: FREE_VOICES.map(item => item.id), pace: 'normal',
   prefetchWithoutAutoplay: true, requireWordTimings: true, speech: createFreeSpeech({ apiBase }), cacheKey: freeAudioCacheKey,
   onStateChange: render, onProgress: renderWords, onError: text => message(text),
+  ...example?.playerOptions,
 });
 player.setAutoplay(settings.autoplay !== false);
 function updateVoices(language) {
+  if (example) { example.configureControls({ voice: $('voice'), pace: $('pace') }); return; }
   const selected = player.getState().voice;
   const choices = FREE_VOICES.filter(item => item.language === language.split('-')[0]);
   $('voice').replaceChildren(...choices.map(item => {
@@ -192,6 +197,8 @@ function placeReaderTools() {
   $('focusReadingSettings').hidden = !focused;
   $('canvasMenu').classList.toggle('mobile-toolbar-menu', focused);
   (focused ? $('focusToolbarMenu') : $('playerSiteMenu')).append($('canvasMenu'));
+  if (focused) $('focusToolbarMenu').prepend($('promptButton'));
+  else $('playerSiteMenu').before($('promptButton'));
   if (active && [$("focusModeButton"), $("autoButton"), $("voiceSetting"), $("paceSetting"), $("canvasMenu")].some(node => node.contains(active))) active.focus({ preventScroll: true });
 }
 function updateFocusSentence() {
@@ -261,9 +268,8 @@ function turnPage(direction) {
 }
 function showReader() {
   document.body.classList.toggle('is-card-player', !document.body.classList.contains('is-focus-mode')); document.body.classList.remove('content-page');
-  $('welcome').hidden = true; $('playerLayout').hidden = false; $('playerFooter').hidden = false;
+  $('playerLayout').hidden = false; $('playerFooter').hidden = false;
   $('shareButton').hidden = false;
-  $('promptButton').hidden = !owner(); $('emptyPrompt').hidden = !owner();
 }
 async function refresh() {
   if (refreshing || !canvasId) return;
@@ -298,7 +304,7 @@ async function refresh() {
       $('emptyCanvas').querySelector('h2').textContent = 'Canvas not found';
       $('emptyMessage').textContent = 'Check the link. The canvas may have been deleted.';
       $('emptyTip').hidden = true; $('fullReader').hidden = true;
-      $('readingSettings').hidden = true; $('emptyPrompt').hidden = true; $('promptButton').hidden = true;
+      $('readingSettings').hidden = true;
       clearTimeout(pollTimer); canvasId = '';
     } else message('Could not load your canvas. We will try again.');
   } finally {
@@ -313,17 +319,19 @@ async function copy(text, success) {
 }
 async function preparePrompt() {
   const access = owner();
-  if (!access || !canvas) return;
   try {
-    if (new Date(access.upload_expires_at).getTime() <= Date.now()) {
+    if (access && canvas && new Date(access.upload_expires_at).getTime() <= Date.now()) {
       const result = await request(`/canvases/${canvasId}/upload-code`, { method: 'POST', body: {}, code: access.manage_code });
       Object.assign(access, result.data); storage.set(`owner:${canvasId}`, access);
     }
-    const prompt = canvasPrompt({ canvas, apiBase, uploadCode: access.upload_code, expiresAt: access.upload_expires_at });
+    const prompt = access && canvas
+      ? canvasPrompt({ canvas, apiBase, uploadCode: access.upload_code, expiresAt: access.upload_expires_at })
+      : connectAiPrompt(new URL('./guide.html', location.href).href);
     $('promptText').value = prompt;
-    $('ownerAccess').hidden = false; $('ownerCode').value = access.manage_code;
+    $('promptTitle').textContent = 'Send text into the player';
+    $('promptDescription').hidden = false;
+    $('copyPromptText').textContent = 'Copy';
     $('promptDialog').showModal();
-    await copy(prompt, 'Prompt copied. Paste it into your AI and add your task.');
   } catch { message('Could not prepare the prompt. Try again.'); }
 }
 function saveSettings() {
@@ -338,38 +346,19 @@ function toggleReading() {
   });
 }
 
-$('createForm').addEventListener('submit', async event => {
-  event.preventDefault(); $('createButton').disabled = true; message('');
-  try {
-    const { data } = await request('/canvases', { method: 'POST', body: {
-      title: $('canvasTitle').value.trim(), language: $('canvasLanguage').value,
-    } });
-    canvasId = data._id;
-    storage.set(`owner:${canvasId}`, { manage_code: data.manage_code, upload_code: data.upload_code, upload_expires_at: data.upload_expires_at });
-    history.replaceState(null, '', `?id=${encodeURIComponent(canvasId)}`);
-    await refresh(); await preparePrompt();
-  } catch { message('Could not create your canvas. Try again shortly.'); }
-  finally { $('createButton').disabled = false; }
-});
 $('promptButton').onclick = preparePrompt;
-$('emptyPrompt').onclick = preparePrompt;
 $('closePrompt').onclick = () => $('promptDialog').close();
 $('copyPromptText').onclick = async () => {
-  if (!await copy($('promptText').value, 'Prompt copied.')) { $('promptText').focus(); $('promptText').select(); }
+  try { await navigator.clipboard.writeText($('promptText').value); $('copyPromptText').textContent = 'Copied'; }
+  catch { $('promptText').focus(); $('promptText').select(); }
 };
 $('shareButton').onclick = async () => {
   const link = new URL(canvas?.url || location.href); link.hash = '';
   if (!await copy(link.href, 'Canvas link copied. Anyone with this link can read the text.')) {
-    $('promptText').value = link.href; $('ownerAccess').hidden = true; $('promptDialog').showModal(); $('promptText').select();
+    $('promptTitle').textContent = 'Share link'; $('copyPromptText').textContent = 'Copy';
+    $('promptDescription').hidden = true;
+    $('promptText').value = link.href; $('promptDialog').showModal(); $('promptText').select();
   }
-};
-$('deleteCanvas').onclick = async () => {
-  const access = owner();
-  if (!access || !confirm('Delete this canvas and its text? Its shared link will stop working.')) return;
-  try {
-    await request(`/canvases/${canvasId}`, { method: 'DELETE', code: access.manage_code });
-    storage.set(`owner:${canvasId}`, null); $('promptDialog').close(); etag = null; await refresh();
-  } catch { message('Could not delete the canvas. Try again.'); }
 };
 $('playButton').onclick = () => { void toggleReading(); };
 $('focusModeButton').onclick = () => setFocusMode($('focusReader').hidden);
@@ -505,16 +494,4 @@ document.addEventListener('visibilitychange', () => { if (!document.hidden) void
 window.addEventListener('online', () => void refresh());
 window.addEventListener('pagehide', () => player.pause());
 
-if (!canvasId && params.get('example') === '1') {
-  try {
-    const { data } = await request('/canvases', { method: 'POST', body: {
-      title: 'Free Kokoro speech test', language: 'en', chapters: [{ title: 'Listen and read', pages: [{ title: 'First steps',
-        text: 'This canvas uses the free Kokoro voice on our server. You do not need a key to listen. Read each sentence as the player speaks. You can pause, repeat a sentence, or move to the next one.',
-      }], subchapters: [] }],
-    } });
-    canvasId = data._id;
-    storage.set(`owner:${canvasId}`, { manage_code: data.manage_code, upload_code: data.upload_code, upload_expires_at: data.upload_expires_at });
-    history.replaceState(null, '', `?id=${encodeURIComponent(canvasId)}`);
-  } catch { message('Could not create the test canvas. Please try again.'); }
-}
 if (canvasId) { showReader(); void refresh(); }

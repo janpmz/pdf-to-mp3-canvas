@@ -29,6 +29,21 @@ button, input, select, textarea { font: inherit; }
 .canvas-page dialog.chapter-picker { position: fixed; margin: 0; max-width: calc(100vw - 32px); max-height: calc(100dvh - 32px); }
 .canvas-page dialog.chapter-picker:not([open]) { display: none; }
 .canvas-page dialog.chapter-picker::backdrop { background: rgb(255 255 255 / 18%); backdrop-filter: blur(2px); }
+.canvas-page.is-focus-mode dialog.chapter-picker { border-color: #363636; color: #f1f1f1; background: #242424; box-shadow: 0 28px 70px rgb(0 0 0 / 38%); color-scheme: dark; }
+.canvas-page.is-focus-mode dialog.chapter-picker::backdrop { background: rgb(0 0 0 / 38%); backdrop-filter: blur(6px); }
+.canvas-page.is-focus-mode .chapter-picker .picker-header h2 { color: #f1f1f1; }
+.canvas-page.is-focus-mode .chapter-picker .picker-close { border: 0; color: #ccc; background: #333; }
+.canvas-page.is-focus-mode .chapter-picker .picker-close:hover { color: #fff; background: #414141; }
+.canvas-page.is-focus-mode .chapter-picker-list { scrollbar-color: #626262 #242424; }
+.canvas-page.is-focus-mode .chapter-picker-list::-webkit-scrollbar-track { background: #242424; }
+.canvas-page.is-focus-mode .chapter-picker-list::-webkit-scrollbar-thumb { background: #626262; }
+.canvas-page.is-focus-mode .chapter-picker-list .chapter-option { color: #ddd; }
+.canvas-page.is-focus-mode .chapter-picker-list .chapter-option-title { color: inherit; }
+.canvas-page.is-focus-mode .chapter-picker-list .chapter-option:hover:not(:disabled, .is-selected) { color: #fff; background: #333; }
+.canvas-page.is-focus-mode .chapter-picker-list .chapter-option.is-selected { color: #e3cfff; background: #3a2b50; }
+.canvas-page.is-focus-mode .chapter-picker-list .chapter-option.is-selected:hover { color: #efe4ff; background: #483263; }
+.canvas-page.is-focus-mode .chapter-picker-list .chapter-option:disabled { color: #999; background: transparent; }
+.canvas-page.is-focus-mode .chapter-picker :is(.picker-close, .chapter-option):focus-visible { outline: 2px solid #aa83ed; outline-offset: 2px; }
 .canvas-page .chapter-picker-list .chapter-option { width: calc(100% - var(--depth, 0) * 26px); margin-left: calc(var(--depth, 0) * 26px); }
 .canvas-page .chapter-picker-list .chapter-option:disabled { opacity: .5; cursor: default; }
 .canvas-menu-settings .canvas-voice-setting { display: flex; justify-content: space-between; padding: 8px 12px; color: #4f596a; font: 500 13px/20px "Site Inter", system-ui, sans-serif; }
@@ -37,6 +52,7 @@ button, input, select, textarea { font: inherit; }
 .canvas-page .chapter-option-title { white-space: normal; overflow-wrap: anywhere; }
 .canvas-empty-reader { display: flex; width: 100%; min-height: 0; padding: 32px; overflow-y: auto; }
 .canvas-notice { position: fixed; z-index: 45; right: 24px; bottom: calc(var(--ui-footer-height) + 14px); left: 24px; margin: 0; color: #697386; font-size: 13px; line-height: 1.5; text-align: center; pointer-events: none; }
+.canvas-page.is-focus-mode > #message:not([hidden]) { display: block !important; color: #aaa; }
 .control-play .loading-icon { display: none; }
 .control-play.is-loading .loading-icon { display: inline-block; color: currentColor; }
 .control-play.is-loading :is(.play-icon, .pause-icon) { display: none; }
@@ -49,33 +65,34 @@ button, input, select, textarea { font: inherit; }
   .canvas-page .player-card-header { gap: 4px; }
   .canvas-page .canvas-chapters-button { padding-inline: 8px; }
 }
-.welcome { width: min(100%, 640px); margin: 0 auto; padding: 140px 28px 60px; }
-.welcome h1 { margin: 0; font: 400 40px/1.45 "Libre Baskerville", Baskerville, serif; }
-.welcome-copy { margin: 0 0 24px; color: #535f74; font-size: 18px; line-height: 1.6; }
-.create-card { gap: 12px; }
-.create-card label { font-size: 14px; }
-.create-card select { margin-bottom: 10px; }
-.quiet, .guide-link, .steps { color: #7e8698; font-size: 13px; line-height: 1.6; }
-.steps { padding-left: 20px; margin: 24px 0 16px; }
-.welcome a, .canvas-dialog a, .guide a { color: var(--accent-700); text-decoration: underline; text-underline-offset: 3px; }
+.quiet { color: #7e8698; font-size: 13px; line-height: 1.6; }
+.canvas-dialog a, .guide a { color: var(--accent-700); text-decoration: underline; text-underline-offset: 3px; }
+.canvas-send-text { display: inline-flex; flex-shrink: 0; align-items: center; justify-content: center; min-height: 36px; padding: 0 16px; border: 0; border-radius: 999px; color: #f1f1f1; background: linear-gradient(180deg, #3b3b3b, #2c2c2c); box-shadow: inset 0 1px 0 rgb(255 255 255 / 12%), inset 0 -1px 0 rgb(0 0 0 / 28%), 0 2px 3px rgb(0 0 0 / 28%); font-size: 12px; font-weight: 600; white-space: nowrap; cursor: pointer; transition: background 140ms ease, box-shadow 140ms ease, transform 100ms ease; }
+.canvas-page.is-focus-mode #focusToolbarMenu { display: flex; width: auto; align-items: center; justify-content: flex-end; gap: 8px; }
+.canvas-page.is-focus-mode #focusToolbarMenu > .canvas-menu { position: relative; top: auto; right: auto; }
+.canvas-page.is-focus-mode #focusToolbarMenu > .canvas-send-text { display: inline-flex !important; }
+.canvas-page.is-focus-mode .app-toolbar.app-toolbar-page { grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); }
+.canvas-send-text:hover { background: linear-gradient(180deg, #484848, #383838); }
+.canvas-send-text:active { box-shadow: inset 0 2px 4px rgb(0 0 0 / 28%); transform: translateY(1px); }
+.canvas-send-text:focus-visible { outline: 2px solid currentColor; outline-offset: 4px; }
 .empty-canvas { max-width: 420px; margin: auto; text-align: center; }
 .empty-canvas h2 { font: 400 26px/1.5 "Libre Baskerville", Baskerville, serif; }
 .empty-canvas p { color: #7e8698; font-size: 14px; line-height: 1.6; }
 
 .canvas-dialog:not([open]) { display: none; }
-.canvas-dialog { width: min(490px, calc(100% - 32px)); padding: 24px; color: var(--body); font-size: 14px; line-height: 1.6; }
-.canvas-dialog::backdrop { background: rgb(5 11 26 / 18%); backdrop-filter: blur(2px); }
+.canvas-dialog { box-sizing: border-box; width: min(540px, calc(100% - 32px)); max-height: calc(100dvh - 32px); padding: 24px; overflow: auto; border: 0; border-radius: 28px; color: #f1f1f1; background: #242424; box-shadow: 0 34px 90px rgb(0 0 0 / 38%), 0 8px 24px rgb(0 0 0 / 20%); font-size: 14px; line-height: 1.5; color-scheme: dark; }
+.canvas-dialog::backdrop { background: rgb(0 0 0 / 38%); backdrop-filter: blur(6px); }
 .dialog-heading { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
-.dialog-heading h2 { margin: 0; }
-.canvas-dialog .dialog-heading button { min-height: 36px; padding: 8px 12px; }
-.canvas-dialog p { margin: 16px 0; }
-.dialog-actions { display: flex; justify-content: flex-end; gap: 12px; margin-top: 20px; }
-.dialog-actions .subscription-button-primary { width: auto; }
-.prompt-dialog { width: min(700px, calc(100% - 32px)); }
-.prompt-dialog textarea { width: 100%; min-height: 220px; max-height: 45dvh; padding: 16px; border: 1px solid #d5dfe7; border-radius: 12px; color: #374359; background: #f8fafc; font-size: 12px; line-height: 1.6; resize: vertical; }
-.owner-access { margin-top: 20px; font-size: 12px; }
-.owner-access summary { cursor: pointer; }
-.owner-access .subscription-button { margin-top: 12px; }
+.dialog-heading h2 { margin: 0; font: 800 22px/28px "Site Inter", system-ui, sans-serif; letter-spacing: -.035em; }
+.prompt-close { display: grid; width: 40px; height: 40px; flex: 0 0 auto; place-items: center; padding: 0; border: 0; border-radius: 999px; color: #ccc; background: #333; cursor: pointer; }
+.prompt-close span { width: 18px; height: 18px; background: currentColor; mask: url("../assets/share/close.svg") center / contain no-repeat; }
+.prompt-close:hover { color: #fff; background: #414141; }
+#promptDescription { margin: 6px 0 0; color: #b6b6b6; font-size: 14px; line-height: 21px; }
+.prompt-dialog textarea { box-sizing: border-box; display: block; width: 100%; height: 224px; min-height: 160px; max-height: 45dvh; margin-top: 22px; padding: 16px; border: 0; border-radius: 16px; color: #e5e5e5; background: #191919; font-size: 13px; line-height: 22px; resize: vertical; }
+.prompt-copy { display: block; width: 100%; min-height: 46px; margin-top: 18px; padding: 10px 16px; border: 0; border-radius: 999px; color: #fff; background: linear-gradient(180deg, #8450dc, #6530bc); box-shadow: inset 0 1px 0 rgb(255 255 255 / 23%), inset 0 -1px 0 rgb(0 0 0 / 22%), 0 2px 3px rgb(0 0 0 / 28%); font-size: 14px; font-weight: 600; cursor: pointer; }
+.prompt-copy:hover { background: linear-gradient(180deg, #925fe7, #723bca); }
+.prompt-copy:active { box-shadow: inset 0 2px 4px rgb(0 0 0 / 28%); }
+.prompt-dialog :is(button, textarea):focus-visible { outline: 2px solid #aa83ed; outline-offset: 3px; }
 html:has(> body.canvas-guide-page) { height: auto; overflow-y: auto; }
 body.canvas-guide-page { height: auto; overflow: visible; }
 .canvas-guide-page .player-stage { height: auto; overflow: visible; }
@@ -87,13 +104,19 @@ body.canvas-guide-page { height: auto; overflow: visible; }
 .guide pre { padding: 20px; border: 1px solid #d5dfe7; border-radius: 12px; background: #f8fafc; font-size: 12px; overflow-x: auto; }
 
 @media (max-width: 600px) {
-  .canvas-page.is-focus-mode .app-toolbar.app-toolbar-page { grid-template-columns: max-content minmax(0, 1fr) 44px; column-gap: 8px; padding-inline: 16px; }
-  .canvas-page.is-focus-mode .app-toolbar > #focusToolbarMenu { width: 44px; }
+  .canvas-dialog { padding: 20px; }
+  .prompt-dialog textarea { height: 280px; }
+  .canvas-page.is-focus-mode .app-toolbar.app-toolbar-page { grid-template-columns: max-content minmax(0, 1fr) max-content; column-gap: 8px; padding-inline: 16px; }
+  .canvas-page.is-focus-mode .app-toolbar > #focusToolbarMenu { width: auto; gap: 4px; }
+  .canvas-send-text { padding-inline: 8px; font-size: 11px; }
   .canvas-page.is-focus-mode #focusReadingSettings { justify-self: center; gap: 12px; }
   .canvas-page.is-focus-mode #focusReadingSettings > :is(#voiceSetting, #paceSetting) { gap: 4px; font-size: 11px; }
 }
 @media (max-width: 360px) {
-  .canvas-page.is-focus-mode .app-toolbar.app-toolbar-page { column-gap: 4px; padding-inline: 12px; }
+  .canvas-page.is-focus-mode .player-stage { --player-toolbar-height: 104px; }
+  .canvas-page.is-focus-mode .app-toolbar.app-toolbar-page { grid-template-columns: 1fr auto; grid-template-rows: 56px 44px; column-gap: 8px; padding-inline: 16px; }
+  .canvas-page.is-focus-mode .app-toolbar > #focusToolbarMenu { grid-column: 2; }
+  .canvas-page.is-focus-mode .app-toolbar > #focusReadingSettings { grid-column: 1 / -1; grid-row: 2; }
   .canvas-page.is-focus-mode #focusReadingSettings { gap: 8px; }
   .canvas-page.is-focus-mode #focusReadingSettings > :is(#voiceSetting, #paceSetting) { font-size: 10px; }
 }
