@@ -17,7 +17,16 @@ button, input, select, textarea { font: inherit; }
 .canvas-menu .player-menu-icon { display: block; width: 20px; height: 20px; background: currentColor; mask: url("../assets/share/dots-three-vertical.svg") center / contain no-repeat; }
 .canvas-page.is-focus-mode #focusReadingSettings { display: flex; align-items: center; gap: 24px; }
 .canvas-page.is-focus-mode #focusReadingSettings > :is(#voiceSetting, #paceSetting) { display: inline-flex !important; align-items: center; gap: 8px; color: #a3a3a3; font: 500 12px/20px "Site Inter", system-ui, sans-serif; }
-.canvas-page.is-focus-mode .player-footer .footer-tools { right: 36px; }
+.canvas-page.is-focus-mode { --canvas-footer-row-height: 116px; --ui-footer-height: calc(var(--canvas-footer-row-height) * var(--ui-footer-scale)); }
+.canvas-page.is-focus-mode .player-stage { --focus-footer-height: calc(var(--canvas-footer-row-height) + env(safe-area-inset-bottom, 0px)); }
+.canvas-page.is-focus-mode .player-footer :is(.action-row, .focus-mode-button, .footer-tools) { top: calc(var(--canvas-footer-row-height) / 2); bottom: auto; }
+.canvas-page.is-focus-mode .player-footer .action-row { position: absolute; left: 50%; display: flex; width: max-content; height: auto; min-height: 0; flex: none; gap: 0; margin: 0; transform: translate(-50%, -50%); }
+.canvas-page.is-focus-mode .player-footer .player-controls { width: auto; flex: none; }
+.canvas-page.is-focus-mode .player-footer .focus-mode-button { left: max(24px, env(safe-area-inset-left, 0px)); width: 64px; height: 46px; min-width: 64px; min-height: 46px; padding: 0; font: 500 12px/1.2 "Site Inter", system-ui, sans-serif; }
+.canvas-page.is-focus-mode .player-footer .focus-mode-button svg { width: 24px; height: 24px; }
+.canvas-page.is-focus-mode .player-footer .footer-tools { right: max(24px, env(safe-area-inset-right, 0px)); left: auto; width: 64px; }
+.canvas-page.is-focus-mode .player-footer #autoButton { position: relative; width: 64px; height: 46px; min-width: 64px; justify-content: center; gap: 0; }
+.canvas-page.is-focus-mode .player-footer :is(#focusModeLabel, #autoButton .tool-label) { position: absolute; top: calc(100% + 4px); left: 50%; margin: 0; font: 500 12px/1.2 "Site Inter", system-ui, sans-serif; white-space: nowrap; transform: translateX(-50%); }
 .canvas-page.is-focus-mode .canvas-menu .toolbar-more-menu-panel { border-color: #333; color: #d4d4d4; background: #111; box-shadow: 0 16px 38px rgb(0 0 0 / 30%); }
 .canvas-page.is-focus-mode .canvas-menu :is(.toolbar-more-menu-link, .canvas-voice-setting) { color: #d4d4d4; }
 .canvas-page.is-focus-mode .canvas-menu .toolbar-more-menu-link:hover { color: #f5f5f5; background: #202020; }
@@ -63,7 +72,6 @@ button, input, select, textarea { font: inherit; }
   .canvas-page dialog.chapter-picker { left: auto; }
 }
 @media (max-width: 720px) {
-  .canvas-page.is-focus-mode .player-footer .focus-mode-button { top: 32px; }
   .canvas-page .player-card-position .chapter-position-label { display: none; }
   .canvas-page .player-card-header { gap: 4px; }
   .canvas-page .canvas-chapters-button { padding-inline: 8px; }
