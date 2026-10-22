@@ -375,6 +375,11 @@ export function createSentencePlayer(options = {}) {
     next() { if (sentenceIndex + 1 < sentences.length) return begin(sentenceIndex + 1); },
     replay() { return begin(sentenceIndex); },
     seekSentence(index) { if (Number.isFinite(index)) return begin(index); },
+    clickSentence(index = sentenceIndex) {
+      if (!Number.isInteger(index) || !sentences[index]) return;
+      if (index === sentenceIndex && desiredPlaying) return pause();
+      return begin(index);
+    },
     setAutoplay(value) {
       autoplay = !!value;
       if (!autoplay && !prefetchWithoutAutoplay) { cancelExcept(sentenceIndex); prefetchStarted = false; }

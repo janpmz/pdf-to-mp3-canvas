@@ -79,7 +79,7 @@ test('chapter nesting maps to sentence jumps and prompts keep provider keys out 
   assert.match(prompt, /http:\/\/localhost:3000\/canvas\/guide.html/);
 });
 
-test('a sentence click starts speech from idle or paused, and can restart the current sentence', async t => {
+test('seeking a sentence starts speech from idle or paused, and can restart the current sentence', async t => {
   const f = fixture(t);
   await f.player.load(sentences, { play: false, sessionId: 'canvas-clicks' });
   await f.player.seekSentence(1); await flush();
@@ -98,6 +98,62 @@ test('a sentence click starts speech from idle or paused, and can restart the cu
   await f.player.seekSentence(2); await flush();
   assert.equal(f.player.getState().loading, true);
   assert.equal(f.player.getState().sentenceIndex, 2);
+});
+
+test('clicking the playing sentence stops sound; another sentence starts from its beginning', async t => {
+  const f = fixture(t);
+  await f.player.load(sentences, { play: false, sessionId: 'canvas-click-stop' });
+  await f.player.clickSentence(); await flush();
+  f.calls[0].chunk(); f.calls[0].done(); await flush();
+  f.context.advanceFrames(12000); await tick();
+  assert.equal(f.player.getState().playing, true);
+  const position = f.player.getState().position;
+  const speechCalls = f.calls.length;
+  await f.player.clickSentence();
+  assert.equal(f.player.getState().status, 'paused');
+  assert.equal(f.context.state, 'suspended');
+  f.context.advanceFrames(12000); await tick();
+  assert.equal(f.player.getState().position, position);
+  assert.equal(f.calls.length, speechCalls);
+
+  await f.player.clickSentence(1); await flush();
+  assert.equal(f.player.getState().sentenceIndex, 1);
+  assert.equal(f.player.getState().position, 0);
+  assert.equal(f.player.getState().loading, true);
+  assert.equal(f.context.state, 'running');
+  const second = f.calls.findLast(call => call.text === 'Second thought.' && !call.signal.aborted);
+  assert.ok(second);
+  second.chunk(); second.done(); await flush();
+  f.context.advanceFrames(12000); await tick();
+  assert.equal(f.player.getState().playing, true);
+  await f.player.clickSentence(1);
+  assert.equal(f.player.getState().status, 'paused');
+  assert.equal(f.context.state, 'suspended');
+
+  await f.player.clickSentence(1); await flush();
+  assert.equal(f.player.getState().sentenceIndex, 1);
+  assert.equal(f.player.getState().position, 0);
+  f.context.advanceFrames(24000); await tick();
+  assert.equal(f.player.getState().status, 'ended');
+  await f.player.clickSentence(); await flush();
+  assert.equal(f.player.getState().sentenceIndex, 1);
+  assert.equal(f.player.getState().position, 0);
+  assert.equal(f.player.getState().loading, true);
+});
+
+test('clicking a sentence while its sound loads stops it before sound arrives', async t => {
+  const f = fixture(t);
+  await f.player.load(sentences, { play: false });
+  await f.player.clickSentence(0); await flush();
+  assert.equal(f.player.getState().loading, true);
+  await f.player.clickSentence(0);
+  assert.equal(f.player.getState().status, 'paused');
+  f.calls[0].chunk(); f.calls[0].done(); await flush();
+  f.context.advanceFrames(12000); await tick();
+  assert.equal(f.player.getState().status, 'paused');
+  assert.equal(f.player.getState().position, 0);
+  assert.equal(f.context.state, 'suspended');
+  assert.equal(f.calls.length, 1);
 });
 
 test('page ranges keep chapters separate and locate the page after a sentence change or saved position', () => {

@@ -140,7 +140,7 @@ function renderFullText(force = false) {
     button.setAttribute('aria-current', String(currentState.sentenceIndex === index));
     const words = appendSentence(marker, sentence);
     button.append(marker);
-    button.addEventListener('click', () => { void readingAction(() => player.seekSentence(index)); });
+    button.addEventListener('click', () => { void readingAction(() => player.clickSentence(index)); });
     fullRows[index] = { button, words }; fragment.append(button);
   }
   $('sentenceList').replaceChildren(fragment);
@@ -373,7 +373,7 @@ $('deleteCanvas').onclick = async () => {
 };
 $('playButton').onclick = () => { void toggleReading(); };
 $('focusModeButton').onclick = () => setFocusMode($('focusReader').hidden);
-$('focusSentence').onclick = () => { void readingAction(() => player.replay()); };
+$('focusSentence').onclick = () => { void readingAction(() => player.clickSentence()); };
 $('repeatButton').onclick = () => { void readingAction(() => player.replay()); };
 $('previousButton').onclick = () => { void readingAction(() => player.previous()); };
 $('nextButton').onclick = () => { void readingAction(() => player.next()); };
